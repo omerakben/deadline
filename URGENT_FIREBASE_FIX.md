@@ -1,10 +1,13 @@
 # 🚨 CRITICAL FIX NEEDED - Firebase Web App Credentials
 
 ## Problem
+
 Your demo login is failing because `.env.local` has **FAKE/PLACEHOLDER** Firebase credentials.
 
 ## Root Cause
+
 The `.env.local` file has:
+
 ```
 NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyBVm4sR9vKj3xQZxH_eN0Zx7Qj8K9fL5xY  ← FAKE!
 NEXT_PUBLIC_FIREBASE_APP_ID=1:112943741519226739568:web:abc123def456  ← FAKE!
@@ -12,6 +15,7 @@ NEXT_PUBLIC_FIREBASE_APP_ID=1:112943741519226739568:web:abc123def456  ← FAKE!
 
 These are not real Firebase credentials!
 
+~~~~
 ## Solution (Takes 2 minutes)
 
 ### Step 1: Open Firebase Console

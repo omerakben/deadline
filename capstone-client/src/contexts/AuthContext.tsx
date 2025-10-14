@@ -115,8 +115,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     await fbSignOut(auth);
   }, [configError]);
 
+  // Track current user in a ref so we can access latest value in callbacks
+  const userRef = useRef(user);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
   const getTokenCached = useCallback(
-    async (force?: boolean): Promise<string | null> => {
+    async (force = false) => {
       if (configError) {
         if (process.env.NODE_ENV !== "production") {
           console.warn(
@@ -126,7 +132,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }
         return null;
       }
-      if (!user) {
+
+      // Special handling: if we're not loading but user is null,
+      // wait briefly in case we're in the middle of auth state update
+      // This prevents race conditions during sign-in
+      let currentUser = userRef.current;
+      if (!currentUser && !loading) {
+        // Wait up to 1 second for user state to populate
+        const startTime = Date.now();
+        const maxWait = 1000;
+
+        while (!userRef.current && Date.now() - startTime < maxWait) {
+          if (process.env.NODE_ENV !== "production") {
+            console.debug("Auth: Waiting for user state to update...");
+          }
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+        currentUser = userRef.current;
+      }
+
+      // After waiting, check again
+      if (!currentUser) {
         if (process.env.NODE_ENV !== "production") {
           console.warn("Auth: Cannot get token - user not authenticated");
         }
@@ -155,7 +181,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           force ||
           !lastTokenRef.current ||
           now - lastTokenRef.current.ts > 50_000;
-        const token = await getIdToken(user, shouldForceRefresh);
+
+        // Retry logic for custom token sign-in (token might not be immediately available)
+        let token: string | null = null;
+        let retries = 0;
+        const maxRetries = 3;
+
+        while (retries < maxRetries) {
+          token = await getIdToken(currentUser, shouldForceRefresh);
+          if (token) {
+            break; // Success!
+          }
+
+          // Token not available yet, wait and retry
+          if (retries < maxRetries - 1) {
+            const waitTime = Math.min(200 * Math.pow(2, retries), 1000); // 200ms, 400ms, 800ms
+            if (process.env.NODE_ENV !== "production") {
+              console.debug(
+                `Auth: Token not ready, retrying in ${waitTime}ms... (attempt ${
+                  retries + 1
+                }/${maxRetries})`
+              );
+            }
+            await new Promise((resolve) => setTimeout(resolve, waitTime));
+          }
+          retries++;
+        }
+
         if (token) {
           lastTokenRef.current = { token, ts: now };
           if (process.env.NODE_ENV !== "production") {
@@ -164,7 +216,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         } else {
           if (process.env.NODE_ENV !== "production") {
             console.warn(
-              "Auth: Failed to obtain token - getIdToken returned null"
+              "Auth: Failed to obtain token after retries - getIdToken returned null"
             );
           }
         }
@@ -178,7 +230,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         return null;
       }
     },
-    [user, configError]
+    [loading, configError]
   );
 
   const value: AuthContextValue = {

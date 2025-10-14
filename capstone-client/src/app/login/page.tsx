@@ -1,19 +1,19 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
@@ -114,16 +114,29 @@ export default function LoginPage() {
       if (result.token) {
         try {
           // Import signInWithCustomToken dynamically to avoid errors if Firebase isn't loaded
-          const { signInWithCustomToken } = await import('firebase/auth');
-          const { getFirebaseAuth } = await import('@/lib/firebase/client');
+          const { signInWithCustomToken, getIdToken } = await import(
+            "firebase/auth"
+          );
+          const { getFirebaseAuth } = await import("@/lib/firebase/client");
 
           const auth = getFirebaseAuth();
-          await signInWithCustomToken(auth, result.token);
+          const userCredential = await signInWithCustomToken(
+            auth,
+            result.token
+          );
+
+          // Wait for the ID token to be available (fixes race condition)
+          // This ensures the token is ready before redirect happens
+          await getIdToken(userCredential.user, true);
+
+          // Give the auth context a moment to update and cache the token
+          // This prevents race conditions where the dashboard loads before token is cached
+          await new Promise((resolve) => setTimeout(resolve, 500));
 
           // Firebase auth will trigger the useEffect above to redirect
           return;
         } catch (firebaseError) {
-          console.error('Firebase demo sign-in failed:', firebaseError);
+          console.error("Firebase demo sign-in failed:", firebaseError);
           setError("email", {
             message: "Demo authentication failed. Please try again.",
           });
@@ -132,7 +145,7 @@ export default function LoginPage() {
       }
 
       // Fallback: direct redirect for session-based auth
-      router.replace('/dashboard');
+      router.replace("/dashboard");
     } catch (error: unknown) {
       const err = error as { message?: string };
       setError("email", {
