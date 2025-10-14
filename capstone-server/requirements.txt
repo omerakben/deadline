@@ -1,0 +1,28 @@
+# Core Framework
+# Pin to a stable, released Django version (5.1 LTS line)
+Django==5.1.2
+djangorestframework>=3.14
+django-cors-headers>=4.3.0
+
+# Environment Configuration
+python-decouple>=3.8
+
+# Authentication
+firebase-admin>=6.4.0
+
+# Development
+django-extensions>=3.2.0
+django-debug-toolbar>=4.2.0
+
+# API Documentation
+drf-spectacular>=0.26.0
+
+# Production Server
+gunicorn==21.2.0
+
+# PostgreSQL Database
+psycopg2-binary==2.9.9
+dj-database-url==2.1.0
+
+# Static Files
+whitenoise==6.6.0

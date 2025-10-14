@@ -1,0 +1,231 @@
+# DEADLINE Project - Root .gitignore
+
+# ============================================
+# SENSITIVE FILES - NEVER COMMIT THESE!
+# ============================================
+
+# Firebase credentials (CRITICAL - these contain private keys!)
+*serviceAccountKey.json
+*firebase-service-account.json
+*firebase-adminsdk*.json
+deadline-capstone-firebase-adminsdk-*.json
+
+# Environment files with secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Keep example files
+!.env.example
+
+# ============================================
+# Python / Django (Backend)
+# ============================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.hypothesis/
+coverage.xml
+*.cover
+nosetests.xml
+
+# ============================================
+# Node.js / Next.js (Frontend)
+# ============================================
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Production
+/build
+
+# Testing
+coverage/
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Vercel
+.vercel
+
+# Turbopack
+.turbo
+
+# ============================================
+# IDE / Editor
+# ============================================
+
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# ============================================
+# Operating System
+# ============================================
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Windows file download markers (Zone.Identifier)
+*:Zone.Identifier
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ============================================
+# Temporary / Cache Files
+# ============================================
+
+*.log
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
+*.swp
+*.swo
+
+# Cache directories
+.cache/
+tmp/
+temp/
+
+# ============================================
+# Deployment / Platform Specific
+# ============================================
+
+# Railway
+.railway/
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Python tools
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pytype/
+.pyre/
+
+# Type checking
+.pyright/
+
+# ============================================
+# Project Specific
+# ============================================
+
+# Local database backups
+*.sql.gz
+*.dump
+
+# Debug files
+debug_*.py
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Environment-specific configs
+local.py
+local_settings.py

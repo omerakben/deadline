@@ -1,0 +1,208 @@
+@import "tailwindcss";
+
+/* shadcn/ui CSS Variables */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
+  --primary: 240 9% 9%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 240 4.8% 95.9%;
+  --secondary-foreground: 240 5.9% 10%;
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+  --accent: 240 4.8% 95.9%;
+  --accent-foreground: 240 5.9% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --ring: 240 5.9% 10%;
+  --radius: 0.5rem;
+}
+
+/* CSS Variables (Design Tokens) */
+:root {
+  /* Colors */
+  --color-bg: 255 255 255;
+  --color-fg: 23 23 23;
+  --color-border: 229 231 235;
+  --color-muted: 107 114 128;
+  --color-accent: 59 130 246; /* blue-500 */
+  --color-accent-emphasis: 37 99 235; /* blue-600 */
+  --color-danger: 220 38 38; /* red-600 */
+  --color-warn: 217 119 6; /* amber-600 */
+  --color-success: 22 163 74; /* green-600 */
+
+  /* Spacing scale (4/6/8 pattern) */
+  --space-1: 0.25rem; /*4*/
+  --space-1_5: 0.375rem; /*6*/
+  --space-2: 0.5rem; /*8*/
+  --space-3: 0.75rem; /*12*/
+  --space-4: 1rem; /*16*/
+  --space-6: 1.5rem; /*24*/
+  --space-8: 2rem; /*32*/
+  --space-10: 2.5rem; /*40*/
+  --space-12: 3rem; /*48*/
+
+  /* Typography */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+}
+
+/* Derived color tokens (RGB -> actual color values) */
+:root {
+  --color-background: rgb(var(--color-bg));
+  --color-foreground: rgb(var(--color-fg));
+  --color-border-color: rgb(var(--color-border));
+  --color-muted-fg: rgb(var(--color-muted));
+  --color-accent-fg: rgb(var(--color-accent));
+  --color-accent-emphasis-fg: rgb(var(--color-accent-emphasis));
+  --color-danger-fg: rgb(var(--color-danger));
+  --color-warn-fg: rgb(var(--color-warn));
+  --color-success-fg: rgb(var(--color-success));
+  --font-sans: var(--font-geist-sans, Arial, sans-serif);
+  --font-mono: var(--font-geist-mono, ui-monospace, monospace);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: 10 10 10;
+    --color-fg: 237 237 237;
+    --color-border: 63 63 70; /* zinc-600 */
+    --color-muted: 161 161 170; /* zinc-400 */
+    --color-accent: 96 165 250; /* blue-400 */
+    --color-accent-emphasis: 59 130 246; /* blue-500 */
+  }
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Override scroll-lock behavior from Radix/react-remove-scroll that sets
+   pointer-events: none on <body>. This prevents interaction with portaled
+   dialogs on some setups. Our overlay blocks background clicks. */
+body[data-scroll-locked="1"] {
+  pointer-events: auto !important;
+}
+
+/* Base Element Resets & Utilities */
+* {
+  box-sizing: border-box;
+}
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--color-accent-emphasis);
+}
+
+/* Component Primitives */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: var(--space-2) var(--space-4);
+  font-weight: 500;
+  border: 1px solid var(--color-border-color);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+  color: var(--color-foreground);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.btn:hover {
+  background: rgb(var(--color-accent) / 0.05);
+}
+.btn-primary {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+.btn-primary:hover {
+  background: var(--color-accent-emphasis);
+}
+.btn-danger {
+  background: var(--color-danger);
+  color: #fff;
+  border-color: var(--color-danger);
+}
+.btn-danger:hover {
+  filter: brightness(1.05);
+}
+
+.card {
+  border: 1px solid var(--color-border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  background: var(--color-background);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--font-size-xs);
+  padding: 0 var(--space-2);
+  height: 1.25rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-color);
+  background: rgb(var(--color-accent) / 0.08);
+  color: var(--color-accent-emphasis);
+  font-weight: 500;
+}
+
+/* Environment color modifiers (DEV, STAGING, PROD) */
+.env-dev {
+  background: rgb(var(--color-accent) / 0.12);
+  color: var(--color-accent-emphasis);
+}
+.env-staging {
+  background: rgb(var(--color-warn) / 0.15);
+  color: var(--color-warn);
+}
+.env-prod {
+  background: rgb(var(--color-danger) / 0.15);
+  color: var(--color-danger);
+}
+
+/* Form Field */
+.field-label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  margin-bottom: var(--space-1);
+  display: block;
+}
+.field-error {
+  color: var(--color-danger);
+  font-size: var(--font-size-xs);
+  margin-top: var(--space-1);
+}
+
+/* Focus styles - Enhanced for better accessibility and brand consistency */
+*:focus-visible {
+  outline: 2px solid #2563EB;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Button and link focus states - Stronger visual feedback */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #2563EB;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
