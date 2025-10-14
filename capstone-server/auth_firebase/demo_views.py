@@ -9,10 +9,13 @@ import logging
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes,
+)
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-
 from workspaces.models import Workspace
 
 logger = logging.getLogger(__name__)
@@ -21,20 +24,22 @@ User = get_user_model()
 
 
 @api_view(["POST"])
+@authentication_classes([])  # No authentication required - bypasses CSRF
 @permission_classes([AllowAny])
 def demo_login(request):
     """
     Demo mode authentication endpoint.
 
-    Creates a session for the demo user, bypassing Firebase authentication.
+    Generates a Firebase custom token for demo user authentication.
     Only works when DEMO_MODE environment variable is set to True.
 
     Returns:
-        JSON response with demo user info and workspace:
+        JSON response with custom token and demo user info:
         {
+            "custom_token": "firebase_custom_token",
             "uid": "demo_user_uid",
             "is_authenticated": true,
-            "auth_method": "demo_session",
+            "auth_method": "firebase_custom_token",
             "workspace": {...}
         }
     """
@@ -56,25 +61,62 @@ def demo_login(request):
     if created:
         logger.info("Created new demo workspace")
 
-    # Set session data
-    request.session["demo_mode"] = True
-    request.session["demo_uid"] = demo_uid
-    request.session["workspace_id"] = workspace.id
+    # Generate Firebase custom token for demo user
+    try:
+        import firebase_admin
+        from firebase_admin import auth, credentials
 
-    response_data = {
-        "uid": demo_uid,
-        "is_authenticated": True,
-        "auth_method": "demo_session",
-        "workspace": {
-            "id": workspace.id,
-            "name": workspace.name,
-            "description": workspace.description,
-        },
-    }
+        # Initialize Firebase Admin if not already initialized
+        if len(firebase_admin._apps) == 0:
+            # Try to initialize from settings
+            import os
 
-    logger.info("Demo login successful for UID: %s", demo_uid)
+            firebase_creds_file = getattr(settings, "FIREBASE_CREDENTIALS_FILE", "")
+            if firebase_creds_file and os.path.exists(firebase_creds_file):
+                cred = credentials.Certificate(firebase_creds_file)
+                firebase_admin.initialize_app(cred)
+                logger.info("Initialized Firebase Admin SDK for demo mode")
+            else:
+                raise Exception(
+                    "Firebase credentials not configured. Cannot generate demo token."
+                )
 
-    return Response(response_data, status=status.HTTP_200_OK)
+        custom_token = auth.create_custom_token(demo_uid)
+
+        # Set session data as backup
+        request.session["demo_mode"] = True
+        request.session["demo_uid"] = demo_uid
+        request.session["workspace_id"] = workspace.id
+
+        response_data = {
+            "custom_token": (
+                custom_token.decode("utf-8")
+                if isinstance(custom_token, bytes)
+                else custom_token
+            ),
+            "uid": demo_uid,
+            "is_authenticated": True,
+            "auth_method": "firebase_custom_token",
+            "workspace": {
+                "id": workspace.id,
+                "name": workspace.name,
+                "description": workspace.description,
+            },
+        }
+
+        logger.info(
+            "Demo login successful with Firebase custom token for UID: %s", demo_uid
+        )
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        logger.error("Failed to generate Firebase custom token: %s", str(e))
+        return Response(
+            {
+                "error": "Failed to generate demo authentication token. Please check server configuration."
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 @api_view(["POST"])

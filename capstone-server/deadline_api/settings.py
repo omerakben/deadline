@@ -59,6 +59,18 @@ if VERCEL_FRONTEND_URL:
 
 CORS_ALLOW_CREDENTIALS = True
 
+# CSRF settings - Trust same origins as CORS for API endpoints
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
+    "http://localhost:3002",
+    "http://127.0.0.1:3002",
+]
+if VERCEL_FRONTEND_URL:
+    CSRF_TRUSTED_ORIGINS.append(VERCEL_FRONTEND_URL)
+
 
 # Application definition
 
@@ -252,48 +264,45 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Firebase initialization - skip entirely in demo mode
-if not DEMO_MODE:
-    try:  # Initialize Firebase Admin SDK
-        import firebase_admin
-        from firebase_admin import credentials
+# Firebase initialization - needed even in demo mode for custom token generation
+try:  # Initialize Firebase Admin SDK
+    import firebase_admin
+    from firebase_admin import credentials
 
-        if len(firebase_admin._apps) == 0:  # pylint: disable=protected-access
-            cred = None
+    if len(firebase_admin._apps) == 0:  # pylint: disable=protected-access
+        cred = None
 
-            # Priority 1: Check for runtime-generated credentials file (Railway production)
-            runtime_creds_path = "/tmp/firebase-credentials.json"
-            if os.path.exists(runtime_creds_path):
-                cred = credentials.Certificate(runtime_creds_path)
-                logger.info("Using Firebase credentials from %s", runtime_creds_path)
-            # Priority 2: Check for explicitly configured credentials file (local dev)
-            elif FIREBASE_CREDENTIALS_FILE and os.path.exists(FIREBASE_CREDENTIALS_FILE):
-                cred = credentials.Certificate(FIREBASE_CREDENTIALS_FILE)
-                logger.info("Using Firebase credentials from %s", FIREBASE_CREDENTIALS_FILE)
-            # Priority 3: Try environment variables (fallback, may have formatting issues)
-            elif FIREBASE_CONFIG.get("project_id"):
-                cred = credentials.Certificate(FIREBASE_CONFIG)
-                logger.info("Using Firebase credentials from environment variables")
+        # Priority 1: Check for runtime-generated credentials file (Railway production)
+        runtime_creds_path = "/tmp/firebase-credentials.json"
+        if os.path.exists(runtime_creds_path):
+            cred = credentials.Certificate(runtime_creds_path)
+            logger.info("Using Firebase credentials from %s", runtime_creds_path)
+        # Priority 2: Check for explicitly configured credentials file (local dev)
+        elif FIREBASE_CREDENTIALS_FILE and os.path.exists(FIREBASE_CREDENTIALS_FILE):
+            cred = credentials.Certificate(FIREBASE_CREDENTIALS_FILE)
+            logger.info("Using Firebase credentials from %s", FIREBASE_CREDENTIALS_FILE)
+        # Priority 3: Try environment variables (fallback, may have formatting issues)
+        elif FIREBASE_CONFIG.get("project_id"):
+            cred = credentials.Certificate(FIREBASE_CONFIG)
+            logger.info("Using Firebase credentials from environment variables")
 
-            if cred is not None:
-                firebase_admin.initialize_app(cred)
-            else:
-                if DEBUG:
-                    logger.warning(
-                        "Firebase credentials not configured. Set FIREBASE_CREDENTIALS_FILE or FIREBASE_* env vars."
-                    )
-    except ImportError:
-        if not DEBUG:
-            raise
-        logger.warning(
-            "firebase_admin not installed; authentication will fail outside development."
-        )
-    except (ValueError, KeyError) as e:
-        if not DEBUG:
-            raise
-        logger.warning("Firebase initialization failed (development mode): %s", e)
-else:
-    logger.info("Demo mode enabled - skipping Firebase initialization")
+        if cred is not None:
+            firebase_admin.initialize_app(cred)
+        else:
+            if DEBUG:
+                logger.warning(
+                    "Firebase credentials not configured. Set FIREBASE_CREDENTIALS_FILE or FIREBASE_* env vars."
+                )
+except ImportError:
+    if not DEBUG:
+        raise
+    logger.warning(
+        "firebase_admin not installed; authentication will fail outside development."
+    )
+except (ValueError, KeyError) as e:
+    if not DEBUG:
+        raise
+    logger.warning("Firebase initialization failed (development mode): %s", e)
 
 # Local development settings
 if DEBUG:
