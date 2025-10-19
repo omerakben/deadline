@@ -150,6 +150,164 @@ class ArtifactSerializer(serializers.ModelSerializer):
             return []
         return [{"id": t.id, "name": t.name} for t in tags_qs.all().order_by("name")]
 
+    def validate_content(self, value):
+        """
+        Sanitize content field to prevent XSS and injection attacks.
+
+        - Remove null bytes
+        - Enforce size limits
+        - Strip dangerous characters
+        """
+        if not value:
+            return value
+
+        # Remove null bytes (can cause issues in databases)
+        value = value.replace("\x00", "")
+
+        # Enforce content size limit (100KB = ~100,000 characters)
+        MAX_CONTENT_SIZE = 100_000
+        if len(value) > MAX_CONTENT_SIZE:
+            raise serializers.ValidationError(
+                f"Content too large. Maximum size is {MAX_CONTENT_SIZE} characters."
+            )
+
+        return value
+
+    def validate_notes(self, value):
+        """
+        Sanitize notes field.
+
+        - Remove null bytes
+        - Enforce size limits
+        """
+        if not value:
+            return value
+
+        # Remove null bytes
+        value = value.replace("\x00", "")
+
+        # Enforce notes size limit (10KB = ~10,000 characters)
+        MAX_NOTES_SIZE = 10_000
+        if len(value) > MAX_NOTES_SIZE:
+            raise serializers.ValidationError(
+                f"Notes too large. Maximum size is {MAX_NOTES_SIZE} characters."
+            )
+
+        return value
+
+    def validate_url(self, value):
+        """
+        Validate and sanitize URL field to prevent XSS.
+
+        - Only allow http:// and https:// schemes
+        - Block javascript:, data:, vbscript: URIs
+        - Enforce reasonable length limits
+        """
+        if not value:
+            return value
+
+        value = value.strip()
+
+        # Enforce URL length limit (2KB)
+        MAX_URL_LENGTH = 2048
+        if len(value) > MAX_URL_LENGTH:
+            raise serializers.ValidationError(
+                f"URL too long. Maximum length is {MAX_URL_LENGTH} characters."
+            )
+
+        # Convert to lowercase for scheme check (case-insensitive)
+        value_lower = value.lower()
+
+        # Block dangerous URI schemes
+        DANGEROUS_SCHEMES = ["javascript:", "data:", "vbscript:", "file:", "about:"]
+        for scheme in DANGEROUS_SCHEMES:
+            if value_lower.startswith(scheme):
+                raise serializers.ValidationError(
+                    f"Invalid URL scheme. Only http:// and https:// are allowed."
+                )
+
+        # Ensure it starts with http:// or https://
+        if not value_lower.startswith(("http://", "https://")):
+            raise serializers.ValidationError("URL must start with http:// or https://")
+
+        return value
+
+    def validate_key(self, value):
+        """
+        Validate environment variable key format.
+
+        - Only allow alphanumeric, underscore, and hyphen
+        - Enforce reasonable length
+        """
+        if not value:
+            return value
+
+        value = value.strip()
+
+        # Enforce key length limit
+        MAX_KEY_LENGTH = 255
+        if len(value) > MAX_KEY_LENGTH:
+            raise serializers.ValidationError(
+                f"Key too long. Maximum length is {MAX_KEY_LENGTH} characters."
+            )
+
+        # Validate key format (alphanumeric, underscore, hyphen)
+        import re
+
+        if not re.match(r"^[a-zA-Z0-9_-]+$", value):
+            raise serializers.ValidationError(
+                "Key can only contain letters, numbers, underscores, and hyphens."
+            )
+
+        return value
+
+    def validate_value(self, value):
+        """
+        Sanitize environment variable value.
+
+        - Remove null bytes
+        - Enforce size limits
+        """
+        if not value:
+            return value
+
+        # Remove null bytes
+        value = value.replace("\x00", "")
+
+        # Enforce value size limit (64KB)
+        MAX_VALUE_SIZE = 65_536
+        if len(value) > MAX_VALUE_SIZE:
+            raise serializers.ValidationError(
+                f"Value too large. Maximum size is {MAX_VALUE_SIZE} characters."
+            )
+
+        return value
+
+    def validate_title(self, value):
+        """
+        Sanitize title field.
+
+        - Remove null bytes
+        - Enforce size limits
+        - Strip whitespace
+        """
+        if not value:
+            return value
+
+        value = value.strip()
+
+        # Remove null bytes
+        value = value.replace("\x00", "")
+
+        # Enforce title length limit
+        MAX_TITLE_LENGTH = 500
+        if len(value) > MAX_TITLE_LENGTH:
+            raise serializers.ValidationError(
+                f"Title too long. Maximum length is {MAX_TITLE_LENGTH} characters."
+            )
+
+        return value
+
     def validate_tags(self, tags):
         """Validate that all tags belong to the artifact's workspace."""
         if not tags:

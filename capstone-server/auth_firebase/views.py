@@ -7,6 +7,7 @@ endpoints and token verification.
 
 import logging
 
+from django_ratelimit.decorators import ratelimit
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -18,6 +19,7 @@ from .permissions import IsAuthenticated
 logger = logging.getLogger(__name__)
 
 
+@ratelimit(key="user_or_ip", rate="100/m", method="GET", block=True)
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def user_info(request):
@@ -28,6 +30,8 @@ def user_info(request):
     This endpoint is useful for frontend applications to verify authentication
     and get user identity information.
 
+    Rate limit: 100 requests per minute per user or IP address.
+
     Returns:
         JSON response with user information:
         {
@@ -36,6 +40,17 @@ def user_info(request):
             "auth_method": "firebase"
         }
     """
+    # Check for rate limiting
+    if getattr(request, "limited", False):
+        logger.warning(
+            "Rate limit exceeded for user_info from IP: %s",
+            request.META.get("REMOTE_ADDR"),
+        )
+        return Response(
+            {"error": "Too many requests. Please try again later."},
+            status=status.HTTP_429_TOO_MANY_REQUESTS,
+        )
+
     user = request.user
 
     if not isinstance(user, FirebaseUser):
@@ -55,6 +70,7 @@ def user_info(request):
     return Response(user_data, status=status.HTTP_200_OK)
 
 
+@ratelimit(key="user_or_ip", rate="50/m", method="POST", block=True)
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def verify_token(request):
@@ -65,6 +81,8 @@ def verify_token(request):
     Since the request reaches this view, the token has already been verified
     by the FirebaseAuthentication class.
 
+    Rate limit: 50 requests per minute per user or IP address.
+
     Returns:
         JSON response confirming token validity:
         {
@@ -73,6 +91,17 @@ def verify_token(request):
             "token_type": "firebase_id_token"
         }
     """
+    # Check for rate limiting
+    if getattr(request, "limited", False):
+        logger.warning(
+            "Rate limit exceeded for verify_token from IP: %s",
+            request.META.get("REMOTE_ADDR"),
+        )
+        return Response(
+            {"error": "Too many token verification attempts. Please try again later."},
+            status=status.HTTP_429_TOO_MANY_REQUESTS,
+        )
+
     user = request.user
     # Token is available in request.auth but not needed for this endpoint
 

@@ -24,13 +24,29 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config(
-    "SECRET_KEY",
-    default="django-insecure-5s4zka&zl7^8+#l7f2&#vx$xwyq1wo&q6kdt!t7j%l(@f*c6#s",
-)
+# No default provided - SECRET_KEY MUST be set in environment
+SECRET_KEY = config("SECRET_KEY")
+
+# Validate SECRET_KEY is properly configured
+if not SECRET_KEY or SECRET_KEY.startswith("django-insecure-"):
+    from django.core.exceptions import ImproperlyConfigured
+
+    raise ImproperlyConfigured(
+        "SECRET_KEY must be set securely in environment variables. "
+        "Do not use the default insecure key in production."
+    )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config("DEBUG", default=True, cast=bool)
+# Default to False for safety - must explicitly enable for development
+DEBUG = config("DEBUG", default=False, cast=bool)
+
+# Additional production safety check
+if not DEBUG and SECRET_KEY.startswith("django-insecure-"):
+    from django.core.exceptions import ImproperlyConfigured
+
+    raise ImproperlyConfigured(
+        "Cannot run in production mode with an insecure SECRET_KEY"
+    )
 
 # Demo mode for public deployment without Firebase
 DEMO_MODE = config("DEMO_MODE", default=False, cast=bool)
@@ -269,7 +285,12 @@ try:  # Initialize Firebase Admin SDK
     import firebase_admin
     from firebase_admin import credentials
 
-    if len(firebase_admin._apps) == 0:  # pylint: disable=protected-access
+    # Check if Firebase is already initialized using proper API
+    try:
+        firebase_admin.get_app()
+        logger.info("Firebase Admin SDK already initialized")
+    except ValueError:
+        # Not initialized yet, proceed with initialization
         cred = None
 
         # Priority 1: Check for runtime-generated credentials file (Railway production)
@@ -288,6 +309,7 @@ try:  # Initialize Firebase Admin SDK
 
         if cred is not None:
             firebase_admin.initialize_app(cred)
+            logger.info("Firebase Admin SDK initialized successfully")
         else:
             if DEBUG:
                 logger.warning(

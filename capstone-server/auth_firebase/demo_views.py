@@ -8,6 +8,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django_ratelimit.decorators import ratelimit
 from rest_framework import status
 from rest_framework.decorators import (
     api_view,
@@ -23,6 +24,7 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
+@ratelimit(key="ip", rate="10/h", method="POST", block=True)
 @api_view(["POST"])
 @authentication_classes([])  # No authentication required - bypasses CSRF
 @permission_classes([AllowAny])
@@ -32,6 +34,8 @@ def demo_login(request):
 
     Generates a Firebase custom token for demo user authentication.
     Only works when DEMO_MODE environment variable is set to True.
+
+    Rate limit: 10 requests per hour per IP address.
 
     Returns:
         JSON response with custom token and demo user info:
@@ -43,6 +47,17 @@ def demo_login(request):
             "workspace": {...}
         }
     """
+    # Check for rate limiting
+    if getattr(request, "limited", False):
+        logger.warning(
+            "Rate limit exceeded for demo login from IP: %s",
+            request.META.get("REMOTE_ADDR"),
+        )
+        return Response(
+            {"error": "Too many demo login attempts. Please try again later."},
+            status=status.HTTP_429_TOO_MANY_REQUESTS,
+        )
+
     # Check if demo mode is enabled
     if not getattr(settings, "DEMO_MODE", False):
         return Response(
@@ -66,9 +81,11 @@ def demo_login(request):
         import firebase_admin
         from firebase_admin import auth, credentials
 
-        # Initialize Firebase Admin if not already initialized
-        if len(firebase_admin._apps) == 0:
-            # Try to initialize from settings
+        # Check if Firebase Admin is initialized using proper API
+        try:
+            firebase_admin.get_app()
+        except ValueError:
+            # Not initialized yet, try to initialize
             import os
 
             firebase_creds_file = getattr(settings, "FIREBASE_CREDENTIALS_FILE", "")

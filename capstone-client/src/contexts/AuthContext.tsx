@@ -133,38 +133,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         return null;
       }
 
-      // Special handling: if we're not loading but user is null,
-      // wait briefly in case we're in the middle of auth state update
-      // This prevents race conditions during sign-in
-      let currentUser = userRef.current;
-      if (!currentUser && !loading) {
-        // Wait up to 1 second for user state to populate
-        const startTime = Date.now();
-        const maxWait = 1000;
-
-        while (!userRef.current && Date.now() - startTime < maxWait) {
-          if (process.env.NODE_ENV !== "production") {
-            console.debug("Auth: Waiting for user state to update...");
-          }
-          await new Promise((resolve) => setTimeout(resolve, 100));
-        }
-        currentUser = userRef.current;
-      }
-
-      // After waiting, check again
+      // Get current user - no waiting or retries needed
+      const currentUser = userRef.current;
       if (!currentUser) {
         if (process.env.NODE_ENV !== "production") {
           console.warn("Auth: Cannot get token - user not authenticated");
         }
         return null;
       }
+
       const now = Date.now();
 
-      // Reduce cache time to 30 seconds to be more aggressive about refresh
+      // Use cached token if available and fresh (5 minutes cache)
+      const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
       if (
         !force &&
         lastTokenRef.current &&
-        now - lastTokenRef.current.ts < 30_000
+        now - lastTokenRef.current.ts < CACHE_DURATION
       ) {
         if (process.env.NODE_ENV !== "production") {
           console.debug("Auth: Using cached token");
@@ -176,51 +161,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         if (process.env.NODE_ENV !== "production") {
           console.debug("Auth: Fetching fresh token, force=", force);
         }
-        // Always force refresh if cache is expired or force is requested
-        const shouldForceRefresh =
-          force ||
-          !lastTokenRef.current ||
-          now - lastTokenRef.current.ts > 50_000;
 
-        // Retry logic for custom token sign-in (token might not be immediately available)
-        let token: string | null = null;
-        let retries = 0;
-        const maxRetries = 3;
-
-        while (retries < maxRetries) {
-          token = await getIdToken(currentUser, shouldForceRefresh);
-          if (token) {
-            break; // Success!
-          }
-
-          // Token not available yet, wait and retry
-          if (retries < maxRetries - 1) {
-            const waitTime = Math.min(200 * Math.pow(2, retries), 1000); // 200ms, 400ms, 800ms
-            if (process.env.NODE_ENV !== "production") {
-              console.debug(
-                `Auth: Token not ready, retrying in ${waitTime}ms... (attempt ${
-                  retries + 1
-                }/${maxRetries})`
-              );
-            }
-            await new Promise((resolve) => setTimeout(resolve, waitTime));
-          }
-          retries++;
-        }
+        // Get ID token from Firebase (force refresh if requested)
+        const token = await getIdToken(currentUser, force);
 
         if (token) {
           lastTokenRef.current = { token, ts: now };
           if (process.env.NODE_ENV !== "production") {
             console.debug("Auth: Successfully obtained token");
           }
+          return token;
         } else {
           if (process.env.NODE_ENV !== "production") {
-            console.warn(
-              "Auth: Failed to obtain token after retries - getIdToken returned null"
-            );
+            console.warn("Auth: getIdToken returned null");
           }
+          return null;
         }
-        return token;
       } catch (error) {
         if (process.env.NODE_ENV !== "production") {
           console.error("Failed to get Firebase token:", error);
@@ -230,7 +186,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         return null;
       }
     },
-    [loading, configError]
+    [configError]
   );
 
   const value: AuthContextValue = {
