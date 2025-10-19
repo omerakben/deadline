@@ -130,16 +130,17 @@ npm start
 
 **Demo mode:**
 - "Launch Demo" button hits `/api/v1/auth/demo/login/` endpoint
-- Currently broken: expects custom Firebase token from backend but just redirects
-- Fix required: backend must return Firebase custom token, client calls `signInWithCustomToken`
+- Backend must be configured with `DEMO_MODE=True` for public deployment
+- Demo authentication creates Firebase custom token for seamless client auth
+- Recent fix: Demo login now fully functional with proper Firebase token flow
 
-**Known issues (from Analyze.md):**
-- **CRITICAL:** Client components call server-only `redirect()` causing crashes on navigation (use `useRouter().replace()` instead)
-- Demo login doesn't populate Firebase auth, causing immediate AuthGuard bounce
-- Workspace discovery assumes array response but API is paginated
+**Known issues:**
+
+- Workspace discovery assumes array response but API is paginated (affects deep-linking)
 - Multiple redundant `/workspaces/` fetches across dashboard/settings/docs
 - Missing Firebase env validation in `validatePublicEnv()`
 - No caching layer (consider React Query/SWR)
+- No frontend test suite (gap identified for production readiness)
 
 ### Data Flow
 
@@ -228,9 +229,35 @@ NEXT_PUBLIC_FIREBASE_APP_ID=<app-id>
 - Serve with `npm start` or deploy to Vercel
 - Configure `VERCEL_FRONTEND_URL` in backend for CORS
 
+## Development Guidelines
+
+Both backend and frontend have detailed copilot instruction files with comprehensive patterns:
+
+- `capstone-server/.github/copilot-instructions.md` — Django patterns, TODO workflow, quality gates
+- `capstone-client/.github/copilot-instructions.md` — Next.js patterns, auth flow, component guidelines
+
+These files contain:
+
+- Quality gate checklists (lint, typecheck, tests before push)
+- Memory management patterns for tracking implementation decisions
+- Consistent code organization and import ordering
+- Form validation patterns and accessibility requirements
+
+## Technical Debt & Improvements
+
+See `TODO.md` for comprehensive technical debt tracking with:
+
+- **P0 Critical**: Security and functionality blockers (5 items)
+- **P1 High Priority**: Production readiness items (7 items)
+- **P2 Medium**: Code quality and architecture improvements (15 items)
+- **P3 Low Priority**: Nice-to-have enhancements (18 items)
+
+Each task includes file locations, time estimates, and verification steps.
+
 ## Debugging Scripts
 
 Located in `capstone-server/` root:
+
 - `debug_tags.py`, `debug_artifacts.py`, `debug_tags_relationship.py` — Standalone Django shell scripts
 - `scripts/manual_api_probe.py` — API testing utility
 - All bootstrap Django via `deadline_api.settings`, use local SQLite DB
@@ -238,10 +265,6 @@ Located in `capstone-server/` root:
 
 ## Git Workflow
 
-**Hook setup:**
-```bash
-git config core.hooksPath .githooks
-chmod +x .githooks/pre-push
-```
-- Pre-push hook blocks direct pushes to main/master
-- CI workflow (`.github/workflows/ci.yml`) runs tests on PRs
+- Feature branches recommended for all development work
+- CI workflows exist in both `capstone-server/.github/workflows/` and `capstone-client/.github/workflows/`
+- No pre-commit hooks currently configured
