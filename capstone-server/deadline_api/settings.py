@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
 
 from decouple import config
@@ -24,29 +25,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# No default provided - SECRET_KEY MUST be set in environment
-SECRET_KEY = config("SECRET_KEY")
+# Allow dummy key during build phase, but require real key at runtime
+SECRET_KEY = config("SECRET_KEY", default="build-time-secret-key-replace-at-runtime")
 
-# Validate SECRET_KEY is properly configured
-if not SECRET_KEY or SECRET_KEY.startswith("django-insecure-"):
-    from django.core.exceptions import ImproperlyConfigured
+# Validate SECRET_KEY is properly configured at runtime (skip during build/collectstatic)
+if "collectstatic" not in sys.argv and "makemigrations" not in sys.argv:
+    if not SECRET_KEY or SECRET_KEY == "build-time-secret-key-replace-at-runtime":
+        from django.core.exceptions import ImproperlyConfigured
 
-    raise ImproperlyConfigured(
-        "SECRET_KEY must be set securely in environment variables. "
-        "Do not use the default insecure key in production."
-    )
+        raise ImproperlyConfigured(
+            "SECRET_KEY must be set securely in environment variables. "
+            "Do not use the default insecure key in production."
+        )
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # Default to False for safety - must explicitly enable for development
 DEBUG = config("DEBUG", default=False, cast=bool)
 
-# Additional production safety check
-if not DEBUG and SECRET_KEY.startswith("django-insecure-"):
-    from django.core.exceptions import ImproperlyConfigured
-
-    raise ImproperlyConfigured(
-        "Cannot run in production mode with an insecure SECRET_KEY"
-    )
 
 # Demo mode for public deployment without Firebase
 DEMO_MODE = config("DEMO_MODE", default=False, cast=bool)
