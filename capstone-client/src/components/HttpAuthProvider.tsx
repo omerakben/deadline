@@ -16,7 +16,8 @@ export function HttpAuthProvider({ children }: { children: React.ReactNode }) {
     if (attachedRef.current) return;
     if (loading) return; // wait for auth init
     if (configError) return; // don't attach if config broken
-    attachAuth(getIdToken, signOut);
+    // http client expects a single token provider function
+    attachAuth(getIdToken);
     attachedRef.current = true;
   }, [getIdToken, signOut, loading, configError]);
 
