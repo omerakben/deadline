@@ -14,15 +14,16 @@ cd "$(dirname "$0")/capstone-server"
 echo "📁 Current directory: $(pwd)"
 echo ""
 
-# Step 1: Initialize or link Railway project
-echo "Step 1: Initialize Railway project..."
+# Step 1: Link or initialize Railway project (monorepo root)
+echo "Step 1: Link Railway project..."
 echo "---------------------------------------"
-if [ ! -f ".railway" ]; then
-    echo "Creating new Railway project..."
-    railway init
+cd ..
+if railway status >/dev/null 2>&1; then
+  echo "✅ Railway already linked"
 else
-    echo "✅ Railway project already initialized"
+  railway init
 fi
+cd capstone-server
 echo ""
 
 # Step 2: Add PostgreSQL database
@@ -70,7 +71,7 @@ read -p "Press ENTER after you've set Firebase variables..."
 echo ""
 echo "Step 5: Deploying to Railway..."
 echo "--------------------------------"
-railway up
+railway up --service backend
 
 echo ""
 echo "🎉 Deployment initiated!"
