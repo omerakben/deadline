@@ -20,7 +20,7 @@ if ! command -v railway &> /dev/null; then
 fi
 
 # Check if Firebase credentials file exists
-FIREBASE_CREDS_FILE="../deadline-capstone-firebase-adminsdk-fbsvc-8efd8ef2a7.json"
+FIREBASE_CREDS_FILE="/deadline-capstone-firebase-adminsdk-fbsvc-8efd8ef2a7.json"
 if [ ! -f "$FIREBASE_CREDS_FILE" ]; then
     echo "❌ Firebase credentials file not found at: $FIREBASE_CREDS_FILE"
     exit 1
