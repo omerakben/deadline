@@ -163,14 +163,14 @@ class FirebaseAuthentication(BaseAuthentication):
             decoded_token = firebase_auth.verify_id_token(raw_token)
             uid = decoded_token["uid"]
 
-            logger.info("✅ Firebase token verified for UID: %s", uid)
+            logger.info("Firebase token verified for UID: %s", uid)
 
             user = FirebaseUser(uid=uid)
             return (user, raw_token)
 
         except Exception as e:
             # Handle all Firebase exceptions generically
-            logger.warning("❌ Firebase authentication error: %s", str(e))
+            logger.warning("Firebase authentication error: %s", str(e))
             raise AuthenticationFailed(
                 f"Firebase authentication failed: {str(e)}"
             ) from e

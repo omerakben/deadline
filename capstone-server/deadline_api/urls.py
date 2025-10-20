@@ -8,17 +8,18 @@ The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.2/topics/http/urls/
 """
 
+from artifacts.views import ArtifactGlobalSearchView, DocsGlobalListView
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
-from artifacts.views import (
-    ArtifactGlobalSearchView,
-    DocsGlobalListView,
-)
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+
+from .views import api_root
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    # API root
+    path("api/v1/", api_root, name="api-root"),
     # API endpoints
     path("api/v1/workspaces/", include("workspaces.urls")),  # Workspace management
     path(

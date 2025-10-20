@@ -5,18 +5,18 @@
 [![DRF](https://img.shields.io/badge/DRF-REST%20Framework-ff1709?logo=django&logoColor=white)](https://www.django-rest-framework.org/)
 [![Firebase](https://img.shields.io/badge/Firebase-Auth-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com/)
 
-Unified developer command center API: secure workspace‑scoped management of environment variables, prompts, and documentation links.
+Unified developer command center API: secure workspace-scoped management of environment variables, prompts, and documentation links.
 
 ## Overview
 
-DEADLINE provides a structured backend for organizing developer knowledge and configuration artifacts across multiple workspaces and environments (e.g. Development / Staging / Production). The API is protected via Firebase-issued ID tokens validated server‑side with the Admin SDK.
+DEADLINE provides a structured backend for organizing developer knowledge and configuration artifacts across multiple workspaces and environments (e.g. Development / Staging / Production). The API is protected via Firebase-issued ID tokens validated server-side with the Admin SDK.
 
 ## Core Features
 
 - Workspace isolation with owner scoping
 - Polymorphic artifact model (ENV_VAR | PROMPT | DOC_LINK)
-- Environment‑aware uniqueness constraints
-- Global search & environment‑filtered listing endpoints
+- Environment-aware uniqueness constraints
+- Global search & environment-filtered listing endpoints
 - OpenAPI 3 schema + Swagger UI via drf-spectacular
 - Strict Firebase authentication (no dev bypass in code)
 
@@ -24,8 +24,8 @@ DEADLINE provides a structured backend for organizing developer knowledge and co
 
 - Django + DRF
 - Firebase Admin Authentication
-- SQLite (local) — can be swapped for Postgres in production
-- python‑decouple for configuration
+- SQLite (local) - can be swapped for Postgres in production
+- python-decouple for configuration
 - drf-spectacular for schema + docs
 
 ## Repository Layout
@@ -87,7 +87,7 @@ Artifact:
 - `workspace` FK
 - `kind` choice (ENV_VAR, PROMPT, DOC_LINK)
 - Uniqueness constraints on `(workspace, kind, key)` and `(workspace, kind, title)` where fields are applicable
-- Type‑specific validation in serializer / model clean
+- Type-specific validation in serializer / model clean
 
 ## API Surface (Representative)
 
@@ -140,7 +140,7 @@ gunicorn deadline_api.wsgi:application \
 
 ## Logging
 
-All runtime warnings (Firebase init, etc.) use the standard logging API. Configure `LOGGING` in `deadline_api/settings.py` or via an environment‑specific module. Example minimal config:
+All runtime warnings (Firebase init, etc.) use the standard logging API. Configure `LOGGING` in `deadline_api/settings.py` or via an environment-specific module. Example minimal config:
 
 ```python
 LOGGING = {
@@ -154,13 +154,13 @@ LOGGING = {
 ## Security Notes
 
 - No plaintext secrets should be committed (sample `.env.example` provided)
-- All authentication enforced server‑side; no dev bypass logic present
+- All authentication enforced server-side; no dev bypass logic present
 - ENV_VAR values are masked in standard responses; a dedicated action returns the unmasked value for owners
 
 ## Data Model Highlights
 
-- Workspace ↔ EnvironmentType Many‑to‑Many via `WorkspaceEnvironment` join
-- Artifact ↔ Tag Many‑to‑Many via explicit through model `ArtifactTag`
+- Workspace to EnvironmentType many-to-many via `WorkspaceEnvironment` join
+- Artifact to Tag many-to-many via explicit through model `ArtifactTag`
 - Query performance: `select_related` / `prefetch_related` used in viewsets
 
 ## Roadmap (High-Level)
@@ -182,4 +182,4 @@ Provide contact or team identity here.
 
 ---
 
-"DEADLINE API" – Foundational layer for a unified developer operations hub.
+"DEADLINE API" - Foundational layer for a unified developer operations hub.

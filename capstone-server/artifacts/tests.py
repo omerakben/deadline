@@ -431,7 +431,7 @@ class ArtifactModelTest(TestCase):
 
 
 class TagModelTest(TestCase):
-    """Tests for Tag model and Artifact ↔ Tag many-to-many through ArtifactTag."""
+    """Tests for Tag model and Artifact-to-Tag many-to-many through ArtifactTag."""
 
     def setUp(self):
         self.workspace = Workspace.objects.create(
@@ -639,7 +639,7 @@ class ArtifactViewSetTest(APITestCase):
         self.assertEqual(response.data["environment"], "STAGING")
 
         # Verify value is masked in response
-        self.assertEqual(response.data["value"], "••••••")
+        self.assertEqual(response.data["value"], "[masked]")
         self.assertTrue(response.data["value_masked"])
 
         # Verify artifact was created in database

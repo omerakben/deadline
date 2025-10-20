@@ -1,304 +1,135 @@
 # DEADLINE - Developer Command Center
 
-<div align="center">
-
-![DEADLINE Banner](https://img.shields.io/badge/DEADLINE-Production%20Ready-success?style=for-the-badge)
 [![Django](https://img.shields.io/badge/Django-5.1-092E20?style=flat&logo=django)](https://www.djangoproject.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-000000?style=flat&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat&logo=typescript)](https://www.typescriptlang.org/)
 [![Tests](https://img.shields.io/badge/Tests-57%2F57%20Passing-success?style=flat)]()
 
-**A unified hub for managing development artifacts across multiple environments**
+DEADLINE is a full-stack command center that centralizes environment variables, reusable prompts, and documentation links across multiple workspaces and environments (development, staging, production). Firebase authentication enforces strict access controls and every artifact is scoped to its owning workspace.
 
-[Live Demo](#) • [Documentation](./CLAUDE.md) • [Deployment Guide](./DEPLOYMENT.md)
+## Overview
 
-</div>
+- Secure storage for environment variables with server-side masking
+- Prompt library for engineering and support teams
+- Documentation hub with tagging and workspace-level filtering
+- First-class support for multiple environments per workspace
 
----
+## Key Features
 
-## 📋 Overview
+### Workspace Management
 
-DEADLINE is a full-stack developer command center that provides a centralized platform for managing:
+- Multiple workspaces per user, each with environment-specific artifacts
+- Tagging and search APIs for quick lookups
+- Import and export routines for backup and sharing
 
-- 🔐 **Environment Variables** - Secure storage with value masking
-- 💬 **Code/AI Prompts** - Reusable snippets and templates
-- 📚 **Documentation Links** - Organized reference library
+### Security
 
-**Built for developers, by developers** - with multi-workspace support, environment-aware organization (Dev/Staging/Prod), and Firebase authentication for secure access.
+- Firebase authentication (email/password and Google OAuth)
+- Workspace ownership enforced in every query
+- Masked environment variable values with explicit reveal endpoints
 
----
+### Interface and Performance
 
-## ✨ Key Features
+- Responsive UI built with Next.js 15, React 19, and Tailwind CSS 4
+- Server-side rendering and edge-friendly API usage
+- Optimized API client with shared caching and retry logic
 
-### 🏢 Workspace Management
-
-- Multiple workspaces per user for different projects
-- Environment-specific artifact organization
-- Import/export functionality for backup and sharing
-- Tag-based categorization and filtering
-
-### 🔒 Security First
-
-- Firebase authentication (Email/Password + Google OAuth)
-- Workspace ownership isolation
-- ENV_VAR value masking in list views
-- Secure token-based API communication
-
-### 🎨 Modern UI/UX
-
-- Clean, responsive design with Tailwind CSS v4
-- Dark mode support
-- Real-time search and filtering
-- Mobile-optimized interface
-
-### ⚡ Performance
-
-- Optimized API calls with shared state management
-- Server-side rendering with Next.js 15
-- PostgreSQL database with connection pooling
-- CDN-delivered static assets via Vercel
-
----
-
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Backend
 
-- **Framework**: Django 5.1 + Django REST Framework
-- **Database**: PostgreSQL (SQLite for dev)
-- **Authentication**: Firebase Admin SDK
-- **API Docs**: drf-spectacular (OpenAPI 3)
-- **Deployment**: Railway
+- Django 5.1 with Django REST Framework
+- PostgreSQL in production (SQLite for development)
+- Firebase Admin SDK for authentication
+- drf-spectacular for OpenAPI documentation
+- Railway deployment targets with gunicorn
 
 ### Frontend
 
-- **Framework**: Next.js 15 (App Router)
-- **UI Library**: React 19
-- **Styling**: Tailwind CSS v4
-- **Type Safety**: TypeScript 5
-- **Authentication**: Firebase 12
-- **Deployment**: Vercel
+- Next.js 15 App Router with TypeScript 5
+- React Query style data fetching via dedicated API clients
+- Tailwind CSS 4 utility-first styling
+- Vercel deployment configuration
 
----
-
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
-- Python 3.12+
-- Node.js 20+
-- PostgreSQL (optional for local dev)
+- Python 3.12 or newer
+- Node.js 20 or newer
 - Firebase project with Authentication enabled
+- PostgreSQL (optional for local development)
 
-### Backend Setup
+### Backend
 
 ```bash
 cd capstone-server
-
-# Create virtual environment
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Configure environment
 cp .env.example .env
-# Edit .env with your Firebase credentials
-
-# Run migrations
 python manage.py migrate
-
-# (Optional) Seed demo data
-python manage.py seed_demo_data
-
-# Start development server
 python manage.py runserver
 ```
 
-API will be available at: `http://127.0.0.1:8000/api/v1/`
+The API is available at `http://127.0.0.1:8000/api/v1/`.
 
-### Frontend Setup
+### Frontend
 
 ```bash
 cd capstone-client
-
-# Install dependencies
 npm install
-
-# Configure environment
 cp .env.example .env.local
-# Edit .env.local with your Firebase config and API URL
-
-# Start development server
 npm run dev
 ```
 
-App will be available at: `http://localhost:3000`
+The application runs at `http://localhost:3000`.
 
----
-
-## 📚 Documentation
-
-- **[CLAUDE.md](./CLAUDE.md)** - Comprehensive architecture guide and development reference
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Step-by-step deployment instructions for Railway & Vercel
-- **[PRODUCTION_CHECKLIST.md](./PRODUCTION_CHECKLIST.md)** - Complete production readiness verification
-- **[IMPROVEMENTS_SUMMARY.md](./IMPROVEMENTS_SUMMARY.md)** - Detailed log of all enhancements and fixes
-
----
-
-## 🧪 Testing
-
-### Backend Tests
+## Testing and Quality Gates
 
 ```bash
 cd capstone-server
 python manage.py test -v 2
+
+cd ../capstone-client
+npm run lint
+npm run typecheck
+npm run build
 ```
 
-**Status**: ✅ 57/57 tests passing
+All commands must complete without warnings before opening a pull request.
 
-### Frontend Quality Gates
+## Project Structure
 
-```bash
-cd capstone-client
-npm run lint        # ESLint (zero warnings enforced)
-npm run typecheck   # TypeScript strict mode
-npm run build       # Production build verification
-```
-
-**Status**: ✅ All checks passing
-
----
-
-## 🏗️ Project Structure
-
-```
+```text
 deadline/
-├── capstone-server/          # Django REST API backend
-│   ├── deadline_api/         # Project settings & root config
-│   ├── workspaces/           # Workspace models & endpoints
-│   ├── artifacts/            # Artifact models & endpoints
-│   └── auth_firebase/        # Firebase authentication
-│
-├── capstone-client/          # Next.js frontend
-│   ├── src/
-│   │   ├── app/             # App Router pages
-│   │   ├── components/      # Reusable UI components
-│   │   ├── contexts/        # React contexts (Auth, Workspace)
-│   │   ├── lib/             # API clients & utilities
-│   │   └── types/           # TypeScript definitions
-│   └── public/              # Static assets
-│
-└── Documentation files
+|-- capstone-server/          # Django REST API backend
+|   |-- deadline_api/         # Project settings and root config
+|   |-- workspaces/           # Workspace models and endpoints
+|   |-- artifacts/            # Artifact models and endpoints
+|   `-- auth_firebase/        # Firebase authentication backend
+`-- capstone-client/          # Next.js frontend
+    |-- src/app/              # App Router pages
+    |-- src/components/       # Reusable UI components
+    |-- src/contexts/         # React contexts (auth, workspace)
+    |-- src/lib/              # API clients and utilities
+    `-- src/types/            # Type definitions
 ```
 
----
+## Deployment
 
-## 🌟 Highlights for Recruiters
+- Backend: Railway with PostgreSQL and gunicorn
+- Frontend: Vercel (uses `.env.local` for build-time configuration)
+- CI workflow runs backend tests, frontend linting, type checking, and builds before deploying
 
-### Code Quality
-
-- ✅ **Zero ESLint warnings** - Strict code quality enforcement
-- ✅ **100% TypeScript coverage** - Full type safety
-- ✅ **Comprehensive tests** - 57 backend tests, all passing
-- ✅ **Clean architecture** - Separation of concerns, SOLID principles
-
-### Modern Practices
-
-- ✅ **Monorepo structure** - Organized codebase
-- ✅ **API documentation** - OpenAPI 3 spec with Swagger UI
-- ✅ **Environment management** - Proper secrets handling
-- ✅ **Error boundaries** - Graceful error handling
-
-### Production Ready
-
-- ✅ **Deployment configs** - Railway & Vercel ready
-- ✅ **Security headers** - XSS, CORS, CSP configured
-- ✅ **Performance optimized** - API call reduction, caching strategy
-- ✅ **Mobile responsive** - Works on all devices
-
-### Demo Access
-
-Try the live demo **without signup** - perfect for quick evaluation!
-
----
-
-## 📸 Screenshots
-
-<!-- Add screenshots of your app here -->
-
-### Dashboard
-
-![Dashboard Screenshot](docs/screenshots/dashboard.png)
-
-### Workspace View
-
-![Workspace Screenshot](docs/screenshots/workspace.png)
-
-### Artifact Management
-
-![Artifacts Screenshot](docs/screenshots/artifacts.png)
-
----
-
-## 🚀 Deployment
-
-### Production Deployment
-
-This project is configured for deployment to:
-
-- **Backend**: Railway (with PostgreSQL)
-- **Frontend**: Vercel (with CDN)
-
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed instructions.
-
-### Environment Variables
-
-Refer to `.env.example` files in both `capstone-server` and `capstone-client` directories for required configuration.
-
----
-
-## 🤝 Contributing
-
-This is a portfolio project, but feedback and suggestions are welcome!
+## Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+2. Create a feature branch (`git checkout -b feature/use-case`)
+3. Run backend tests and frontend QA commands
+4. Commit using Conventional Commit prefixes (`feat:`, `fix:`, `docs:`, etc.)
+5. Open a pull request with a clear summary, test evidence, and any relevant screenshots
 
----
+## License and Attribution
 
-## 📝 License
-
-This project is part of a portfolio and is available for review and educational purposes.
-
----
-
-## 👤 Author
-
-**Omer Akben**
-
-- Portfolio: [omerakben.com](https://omerakben.com)
-- GitHub: [@omerakben](https://github.com/omerakben)
-- LinkedIn: [linkedin.com/in/omerakben](https://linkedin.com/in/omerakben)
-
----
-
-## 🙏 Acknowledgments
-
-- Built as a capstone project demonstrating full-stack development skills
-- Uses modern best practices for production-ready applications
-- Implements enterprise-grade security and authentication patterns
-
----
-
-<div align="center">
-
-**⭐ Star this repo if you find it helpful!**
-
-Made with ❤️ for the developer community
-
-</div>
+This project is published for portfolio and community reference. Questions and suggestions are welcome via issues or pull requests.

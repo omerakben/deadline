@@ -3,10 +3,10 @@ DEADLINE Client (Next.js)
 
 Frontend for the DEADLINE Developer Command Center. Provides a cohesive UI for managing:
 
-- Workspaces (per‑owner isolation via Firebase Auth)
+- Workspaces (per-owner isolation via Firebase Auth)
 - Artifacts: ENV_VAR, PROMPT, DOC_LINK
-- Tags (Many‑to‑Many) with create/list/delete and artifact assignment
-- Environment awareness (DEV/STAGING/PROD) and workspace‑level enable/disable
+- Tags (Many-to-Many) with create/list/delete and artifact assignment
+- Environment awareness (DEV/STAGING/PROD) and workspace-level enable/disable
 - Global docs view and quick artifact search
 
 Requirements
@@ -44,10 +44,10 @@ npm run build && npm start
 Key Features
 ------------
 - Secure Firebase authentication with token injection and retry logic
-- Workspace isolation and environment toggling (server‑validated)
+- Workspace isolation and environment toggling (server-validated)
 - Artifact editing with masked ENV_VAR values and environment switching
 - Tagging (M2M) with usage counts and safe deletion
-- Clean Axios error normalization with user‑friendly messages
+- Clean Axios error normalization with user-friendly messages
 
 Notes
 -----

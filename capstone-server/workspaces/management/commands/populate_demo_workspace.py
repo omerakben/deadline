@@ -216,7 +216,7 @@ Remember: Customer satisfaction is our top priority!""",
 
         self.stdout.write(
             self.style.SUCCESS(
-                f"\n✅ Demo workspace populated successfully!"
+                "\nDemo workspace populated successfully!"
             )
         )
         self.stdout.write(f"   - {artifact_count} artifacts created")

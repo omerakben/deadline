@@ -184,7 +184,7 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.SUCCESS(
-                f"\n✅ Demo data seeded successfully!\n"
+                "\nDemo data seeded successfully!\n"
                 f"   - Created {total_workspaces} workspaces\n"
                 f"   - Created {total_artifacts} artifacts (ENV_VAR, PROMPT, DOC_LINK)\n"
                 f"   - Ready for demo mode"

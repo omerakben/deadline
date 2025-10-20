@@ -15,7 +15,7 @@ export interface BaseArtifact {
 export interface EnvVarArtifact extends BaseArtifact {
   kind: "ENV_VAR";
   key: string;
-  value: string; // May be masked ("••••••")
+  value: string; // May be masked ("[masked]")
 }
 
 export interface PromptArtifact extends BaseArtifact {

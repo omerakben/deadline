@@ -121,7 +121,7 @@ class ArtifactSerializer(serializers.ModelSerializer):
 
             # Mask sensitive values in API responses for security
             if data.get("value"):
-                data["value"] = "••••••"
+                data["value"] = "[masked]"
                 data["value_masked"] = True
             else:
                 data["value_masked"] = False

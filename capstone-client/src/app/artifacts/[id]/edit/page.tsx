@@ -28,7 +28,7 @@ import {
 import { http } from "@/lib/api/http";
 import { listWorkspaces } from "@/lib/api/workspaces";
 import type { Artifact, ArtifactKind, EnvCode } from "@/types/artifacts";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, X } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -656,7 +656,7 @@ function EditArtifactContent() {
                                 }
                               }}
                             >
-                              ×
+                              <X aria-hidden className="h-3 w-3" />
                             </span>
                           </button>
                         );

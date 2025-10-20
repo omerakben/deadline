@@ -52,7 +52,7 @@ class Artifact(models.Model):
     environment = models.CharField(
         max_length=20, choices=ENVIRONMENT_CHOICES, default="DEV"
     )
-    # New: link to WorkspaceEnvironment (many-to-many workspace↔environment)
+    # New: link to WorkspaceEnvironment (many-to-many workspace-to-environment)
     # Kept nullable during migration to backfill safely; later can be non-null
     workspace_env = models.ForeignKey(
         "workspaces.WorkspaceEnvironment",
@@ -202,7 +202,7 @@ class Tag(models.Model):
 
 
 class ArtifactTag(models.Model):
-    """Explicit through table for Artifact ↔ Tag Many-to-Many relation."""
+    """Explicit through table for Artifact-to-Tag many-to-many relation."""
 
     id = models.AutoField(primary_key=True)
     artifact = models.ForeignKey(

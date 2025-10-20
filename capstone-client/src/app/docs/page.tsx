@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useWorkspaces } from "@/contexts/WorkspaceContext";
 import { type DocLink, listDocLinksGlobalServer } from "@/lib/api/docs";
 import { Copy, ExternalLink, FileText, Plus, Search } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getDomain } from "tldts";
@@ -205,14 +206,14 @@ function DocsContent() {
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2 min-w-0 flex-1">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                       src={getFaviconUrl(link.url)}
                       alt=""
+                      width={16}
+                      height={16}
                       className="w-4 h-4 flex-shrink-0"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = "/file.svg";
+                      onError={(event) => {
+                        event.currentTarget.src = "/file.svg";
                       }}
                     />
                     <CardTitle className="text-base leading-tight truncate">

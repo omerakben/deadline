@@ -22,7 +22,7 @@ export function DemoBanner() {
           <line x1="12" y1="9" x2="12" y2="13"></line>
           <line x1="12" y1="17" x2="12.01" y2="17"></line>
         </svg>
-        <span className="font-medium text-yellow-900">🎯 Demo Mode</span>
+        <span className="font-medium text-yellow-900">Demo Mode</span>
         <span className="text-yellow-700">
           You&apos;re using the demo account. Changes are shared with all demo
           users and reset daily.

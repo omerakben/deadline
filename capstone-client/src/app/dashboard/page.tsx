@@ -162,7 +162,7 @@ function DashboardContent() {
                   <h3 className="text-lg font-semibold mb-2">Search Results</h3>
                   {searchLoading ? (
                     <div className="text-sm text-muted-foreground">
-                      Searching…
+                      Searching...
                     </div>
                   ) : searchResults.length === 0 ? (
                     <div className="text-sm text-muted-foreground">

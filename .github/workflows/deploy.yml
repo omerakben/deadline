@@ -194,12 +194,12 @@ jobs:
                         issue_number: context.issue.number,
                         owner: context.repo.owner,
                         repo: context.repo.repo,
-                        body: `## 🚀 Deployment Preview
+                        body: `## Deployment Preview
 
                         **Frontend**: ${{ steps.vercel_url.outputs.url }}
                         **Backend**: Check Railway dashboard
 
-                        ✅ All checks passed`
+                        All checks passed`
                       })
 
     # ============================================
@@ -215,13 +215,13 @@ jobs:
             - name: Deployment Success
               if: success()
               run: |
-                  echo "✅ Deployment successful!"
+                  echo "Deployment successful."
                   echo "Backend deployed to Railway"
                   echo "Frontend deployed to Vercel"
 
             - name: Deployment Failed
               if: failure()
               run: |
-                  echo "❌ Deployment failed!"
+                  echo "Deployment failed."
                   echo "Check logs for details"
                   exit 1

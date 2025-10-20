@@ -42,6 +42,7 @@ export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const methods = useForm<FormValues>({
     defaultValues: {
       email: "",
@@ -49,6 +50,11 @@ export default function LoginPage() {
       confirmPassword: "",
     },
   });
+
+  // Prevent hydration mismatch by only rendering after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const {
     handleSubmit,
@@ -154,6 +160,21 @@ export default function LoginPage() {
     }
   };
 
+  // Prevent hydration mismatch - only show config error after client mount
+  if (!mounted) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-neutral-50 to-neutral-100 p-4">
+        <Card className="w-full max-w-md shadow-lg">
+          <CardHeader className="space-y-2 text-center">
+            <CardTitle className="text-2xl font-bold tracking-tight">
+              Loading...
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
   if (configError) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-neutral-50 to-neutral-100 p-4">
@@ -231,7 +252,7 @@ export default function LoginPage() {
               className="w-full bg-blue-600 hover:bg-blue-700 hover:shadow-lg text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
               type="button"
             >
-              {isSubmitting ? "Launching..." : "🎯 Launch Demo"}
+              {isSubmitting ? "Launching..." : "Launch Demo"}
             </Button>
             <p className="mt-2 text-xs text-blue-700">
               Demo data is shared and reset daily
