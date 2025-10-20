@@ -19,6 +19,7 @@
 ## 📋 Overview
 
 DEADLINE is a full-stack developer command center that provides a centralized platform for managing:
+
 - 🔐 **Environment Variables** - Secure storage with value masking
 - 💬 **Code/AI Prompts** - Reusable snippets and templates
 - 📚 **Documentation Links** - Organized reference library
@@ -30,24 +31,28 @@ DEADLINE is a full-stack developer command center that provides a centralized pl
 ## ✨ Key Features
 
 ### 🏢 Workspace Management
+
 - Multiple workspaces per user for different projects
 - Environment-specific artifact organization
 - Import/export functionality for backup and sharing
 - Tag-based categorization and filtering
 
 ### 🔒 Security First
+
 - Firebase authentication (Email/Password + Google OAuth)
 - Workspace ownership isolation
 - ENV_VAR value masking in list views
 - Secure token-based API communication
 
 ### 🎨 Modern UI/UX
+
 - Clean, responsive design with Tailwind CSS v4
 - Dark mode support
 - Real-time search and filtering
 - Mobile-optimized interface
 
 ### ⚡ Performance
+
 - Optimized API calls with shared state management
 - Server-side rendering with Next.js 15
 - PostgreSQL database with connection pooling
@@ -58,6 +63,7 @@ DEADLINE is a full-stack developer command center that provides a centralized pl
 ## 🛠️ Tech Stack
 
 ### Backend
+
 - **Framework**: Django 5.1 + Django REST Framework
 - **Database**: PostgreSQL (SQLite for dev)
 - **Authentication**: Firebase Admin SDK
@@ -65,6 +71,7 @@ DEADLINE is a full-stack developer command center that provides a centralized pl
 - **Deployment**: Railway
 
 ### Frontend
+
 - **Framework**: Next.js 15 (App Router)
 - **UI Library**: React 19
 - **Styling**: Tailwind CSS v4
@@ -77,6 +84,7 @@ DEADLINE is a full-stack developer command center that provides a centralized pl
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Python 3.12+
 - Node.js 20+
 - PostgreSQL (optional for local dev)
@@ -142,19 +150,23 @@ App will be available at: `http://localhost:3000`
 ## 🧪 Testing
 
 ### Backend Tests
+
 ```bash
 cd capstone-server
 python manage.py test -v 2
 ```
+
 **Status**: ✅ 57/57 tests passing
 
 ### Frontend Quality Gates
+
 ```bash
 cd capstone-client
 npm run lint        # ESLint (zero warnings enforced)
 npm run typecheck   # TypeScript strict mode
 npm run build       # Production build verification
 ```
+
 **Status**: ✅ All checks passing
 
 ---
@@ -186,24 +198,28 @@ deadline/
 ## 🌟 Highlights for Recruiters
 
 ### Code Quality
+
 - ✅ **Zero ESLint warnings** - Strict code quality enforcement
 - ✅ **100% TypeScript coverage** - Full type safety
 - ✅ **Comprehensive tests** - 57 backend tests, all passing
 - ✅ **Clean architecture** - Separation of concerns, SOLID principles
 
 ### Modern Practices
+
 - ✅ **Monorepo structure** - Organized codebase
 - ✅ **API documentation** - OpenAPI 3 spec with Swagger UI
 - ✅ **Environment management** - Proper secrets handling
 - ✅ **Error boundaries** - Graceful error handling
 
 ### Production Ready
+
 - ✅ **Deployment configs** - Railway & Vercel ready
 - ✅ **Security headers** - XSS, CORS, CSP configured
 - ✅ **Performance optimized** - API call reduction, caching strategy
 - ✅ **Mobile responsive** - Works on all devices
 
 ### Demo Access
+
 Try the live demo **without signup** - perfect for quick evaluation!
 
 ---
@@ -213,12 +229,15 @@ Try the live demo **without signup** - perfect for quick evaluation!
 <!-- Add screenshots of your app here -->
 
 ### Dashboard
+
 ![Dashboard Screenshot](docs/screenshots/dashboard.png)
 
 ### Workspace View
+
 ![Workspace Screenshot](docs/screenshots/workspace.png)
 
 ### Artifact Management
+
 ![Artifacts Screenshot](docs/screenshots/artifacts.png)
 
 ---
@@ -226,13 +245,16 @@ Try the live demo **without signup** - perfect for quick evaluation!
 ## 🚀 Deployment
 
 ### Production Deployment
+
 This project is configured for deployment to:
+
 - **Backend**: Railway (with PostgreSQL)
 - **Frontend**: Vercel (with CDN)
 
 See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed instructions.
 
 ### Environment Variables
+
 Refer to `.env.example` files in both `capstone-server` and `capstone-client` directories for required configuration.
 
 ---
