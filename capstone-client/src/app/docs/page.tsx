@@ -9,7 +9,6 @@ import { useToast } from "@/components/ui/use-toast";
 import { useWorkspaces } from "@/contexts/WorkspaceContext";
 import { type DocLink, listDocLinksGlobalServer } from "@/lib/api/docs";
 import { Copy, ExternalLink, FileText, Plus, Search } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getDomain } from "tldts";
@@ -115,12 +114,12 @@ function DocsContent() {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
               Documentation Hub
             </h1>
-            <p className="text-muted-foreground mt-2">
+            <p className="text-sm sm:text-base text-muted-foreground mt-2">
               Centralized access to all your documentation links
             </p>
           </div>
@@ -129,12 +128,12 @@ function DocsContent() {
         {/* Loading skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="animate-pulse">
+            <Card key={i} className="animate-pulse flex flex-col">
               <CardHeader className="pb-3">
                 <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
                 <div className="h-3 bg-muted rounded w-1/2"></div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex-1">
                 <div className="h-3 bg-muted rounded w-full mb-2"></div>
                 <div className="h-8 bg-muted rounded w-24"></div>
               </CardContent>
@@ -147,16 +146,16 @@ function DocsContent() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
             Documentation Hub
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-sm sm:text-base text-muted-foreground mt-2">
             Centralized access to all your documentation links
           </p>
         </div>
-        <Button asChild>
+        <Button asChild className="flex-shrink-0 w-full sm:w-auto">
           <Link href="/docs/new">
             <Plus className="w-4 h-4 mr-2" /> Add Link
           </Link>
@@ -201,73 +200,78 @@ function DocsContent() {
           {filteredDocLinks.map((link) => (
             <Card
               key={link.id}
-              className="group hover:shadow-md transition-shadow"
+              className="group hover:shadow-md transition-shadow flex flex-col"
             >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <Image
+              <CardHeader className="pb-3 flex-shrink-0">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start gap-2 min-w-0 flex-1">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
                       src={getFaviconUrl(link.url)}
                       alt=""
                       width={16}
                       height={16}
-                      className="w-4 h-4 flex-shrink-0"
+                      className="w-4 h-4 flex-shrink-0 mt-0.5"
                       onError={(event) => {
                         event.currentTarget.src = "/file.svg";
                       }}
                     />
-                    <CardTitle className="text-base leading-tight truncate">
-                      {link.title}
-                    </CardTitle>
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-base leading-tight line-clamp-2">
+                        {link.title}
+                      </CardTitle>
+                    </div>
                   </div>
-                  <div className="flex gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0"
+                      className="h-7 w-7 p-0"
                       onClick={() => handleCopyLink(link.url)}
                       title="Copy link"
                     >
-                      <Copy className="w-3 h-3" />
+                      <Copy className="w-3.5 h-3.5" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0"
+                      className="h-7 w-7 p-0"
                       onClick={() =>
                         window.open(link.url, "_blank", "noopener,noreferrer")
                       }
                       title="Open in new tab"
                     >
-                      <ExternalLink className="w-3 h-3" />
+                      <ExternalLink className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground truncate">
+                <p className="text-sm text-muted-foreground truncate mt-1.5">
                   {extractDomainFromUrl(link.url)}
                 </p>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className="pt-0 flex-1 flex flex-col justify-end">
                 {link.label && (
-                  <div className="flex gap-2 mb-3">
+                  <div className="flex gap-2 mb-3 flex-wrap">
                     <Badge variant="secondary" className="text-xs">
                       {link.label}
                     </Badge>
                   </div>
                 )}
-                {link.workspace && (
-                  <div className="mb-2 text-xs">
-                    <Link
-                      className="text-primary hover:underline"
-                      href={`/w/${link.workspace}`}
-                    >
-                      View Workspace
-                    </Link>
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  Updated {new Date(link.updated_at).toLocaleDateString()}
-                </p>
+                <div className="space-y-2">
+                  {link.workspace && (
+                    <div className="text-xs">
+                      <Link
+                        className="text-primary hover:underline"
+                        href={`/w/${link.workspace}`}
+                      >
+                        View Workspace
+                      </Link>
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Updated {new Date(link.updated_at).toLocaleDateString()}
+                  </p>
+                </div>
               </CardContent>
             </Card>
           ))}

@@ -110,7 +110,7 @@ function DashboardContent() {
       }
     };
     void run();
-  }, [debouncedSearch, user]);
+  }, [debouncedSearch, toast, user]);
 
   // Filter workspaces based on search query - ensure workspaces is array
   const filteredWorkspaces = (
