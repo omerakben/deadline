@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 from artifacts.models import (
     Artifact,
+    ArtifactAccessLog,
     ArtifactTag,
     Tag,
     validate_env_var_key,
@@ -9,6 +10,7 @@ from artifacts.models import (
 )
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+from django.core.cache import cache
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -507,6 +509,7 @@ class ArtifactViewSetTest(APITestCase):
 
     def setUp(self):
         """Set up test data and mock Firebase authentication."""
+        cache.clear()
         self.test_user_uid = "test_user_uid_123"
         self.other_user_uid = "other_user_uid_456"
 
@@ -575,6 +578,9 @@ class ArtifactViewSetTest(APITestCase):
             key="OTHER_KEY",
             value="other_value",
         )
+
+    def tearDown(self):  # pylint: disable=invalid-name
+        cache.clear()
 
     def authenticate_user(self):
         """Helper method to authenticate user for tests."""
@@ -645,3 +651,66 @@ class ArtifactViewSetTest(APITestCase):
         # Verify artifact was created in database
         artifact = Artifact.objects.get(id=response.data["id"])
         self.assertEqual(artifact.value, "staging_api_key_value")  # Real value in DB
+
+    @patch("auth_firebase.authentication.firebase_auth.verify_id_token")
+    def test_reveal_env_var_logs_access(self, mock_verify_token):
+        """Revealing an ENV_VAR should produce an audit log entry."""
+
+        mock_verify_token.return_value = {"uid": self.test_user_uid}
+        self.authenticate_user()
+
+        url = f"{self.get_artifact_url(artifact_id=self.env_var_dev.id)}reveal_value/"
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        logs = ArtifactAccessLog.objects.filter(artifact=self.env_var_dev)
+        self.assertEqual(logs.count(), 1)
+        log = logs.first()
+        assert log is not None
+        self.assertEqual(log.user_uid, self.test_user_uid)
+        self.assertEqual(log.action, "REVEAL_VALUE")
+        self.assertEqual(log.metadata.get("artifact_key"), self.env_var_dev.key)
+        self.assertEqual(
+            log.metadata.get("workspace_id"), self.env_var_dev.workspace_id
+        )
+        self.assertTrue(log.ip_address)
+
+    @patch("auth_firebase.authentication.firebase_auth.verify_id_token")
+    def test_reveal_env_var_rate_limited(self, mock_verify_token):
+        """Revealing ENV_VAR more than allowed rate returns 429."""
+
+        cache.clear()
+        mock_verify_token.return_value = {"uid": self.test_user_uid}
+        self.authenticate_user()
+
+        url = f"{self.get_artifact_url(artifact_id=self.env_var_dev.id)}reveal_value/"
+
+        for _ in range(10):
+            resp = self.client.get(url)
+            self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertIn(b"throttled", resp.content.lower())
+
+        self.assertGreaterEqual(
+            ArtifactAccessLog.objects.filter(artifact=self.env_var_dev).count(), 10
+        )
+
+    @patch("auth_firebase.authentication.firebase_auth.verify_id_token")
+    def test_list_rate_limited(self, mock_verify_token):
+        """Artifact list endpoint should be rate limited per user."""
+
+        cache.clear()
+        mock_verify_token.return_value = {"uid": self.test_user_uid}
+        self.authenticate_user()
+
+        url = self.get_artifact_url()
+        for _ in range(60):
+            resp = self.client.get(url)
+            self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertIn(b"throttled", resp.content.lower())

@@ -5,7 +5,10 @@ The monorepo splits into `capstone-server/` (Django REST API) and `capstone-clie
 
 ## Build, Test, and Development Commands
 - `cd capstone-server && python manage.py runserver` (API on `http://127.0.0.1:8000/api/v1/`).
-- `python manage.py migrate` and optional `python manage.py seed_demo_data` for schema + fixtures.
+- `python manage.py migrate` to apply schema changes; hit `POST /api/v1/workspaces/templates/apply/` to provision showcase data when needed.
+- Populate `FIREBASE_WEB_*` keys in `capstone-server/.env`; the frontend now fetches
+  Firebase client settings from `/api/v1/auth/config/` so you no longer need to
+  duplicate them in `capstone-client/.env.local`.
 - `python manage.py test -v 2` keeps all 57 backend checks passing.
 - `cd capstone-client && npm run dev` (Turbopack dev server on `http://localhost:3000`).
 - `npm run lint`, `npm run typecheck`, `npm run qa` - required QA gates before pushing.

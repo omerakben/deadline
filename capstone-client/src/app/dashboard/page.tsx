@@ -3,10 +3,12 @@
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
 import { WorkspaceCard } from "@/components/workspace-card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWorkspaces } from "@/contexts/WorkspaceContext";
 import { searchArtifactsGlobal } from "@/lib/api/search";
+import { applyShowcaseTemplates } from "@/lib/api/workspaces";
 import type { Artifact } from "@/types/artifacts";
 import {
     Database,
@@ -15,6 +17,7 @@ import {
     PlusCircle,
     RotateCcw,
     Search,
+    Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -39,6 +42,32 @@ function DashboardContent() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [searchResults, setSearchResults] = useState<Artifact[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [applyingTemplates, setApplyingTemplates] = useState(false);
+  const { toast } = useToast();
+
+  const handleApplyTemplates = async () => {
+    setApplyingTemplates(true);
+    try {
+      const created = await applyShowcaseTemplates();
+      await refetch();
+      toast({
+        title: "Showcase template ready",
+        description: `Created ${created.length} example workspaces with curated artifacts.`,
+      });
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to apply showcase template.";
+      toast({
+        title: "Template provisioning failed",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setApplyingTemplates(false);
+    }
+  };
 
   // Debounce search query
   useEffect(() => {
@@ -64,8 +93,17 @@ function DashboardContent() {
         setSearchLoading(true);
         const { results } = await searchArtifactsGlobal({ q: debouncedSearch });
         setSearchResults(results);
-      } catch {
-        // Non-fatal; keep empty
+      } catch (error) {
+        console.error("Global search failed:", error);
+
+        // Show user-facing notification
+        toast({
+          title: "Search Failed",
+          description: "Unable to complete search. Please try again.",
+          variant: "destructive",
+        });
+
+        // Keep empty results (don't show stale data)
         setSearchResults([]);
       } finally {
         setSearchLoading(false);
@@ -260,25 +298,44 @@ function DashboardContent() {
                 !error &&
                 filteredWorkspaces.length === 0 &&
                 (!Array.isArray(workspaces) || workspaces.length === 0) && (
-                  <div className="text-center py-12">
+                  <div className="text-center py-12 space-y-6">
                     <Database className="mx-auto h-12 w-12 text-muted-foreground/50" />
                     <h3 className="mt-4 text-lg font-semibold">
                       No workspaces yet
                     </h3>
                     <p className="text-muted-foreground mt-2 max-w-sm mx-auto">
-                      Create your first workspace to start organizing your
-                      development artifacts
+                      Jump in by creating your own workspace or load our
+                      showcase templates to explore every feature instantly.
                     </p>
-                    <Button
-                      asChild
-                      variant="primarySoft"
-                      className="mt-6 px-5 py-2 rounded-lg"
-                    >
-                      <Link href="/workspaces/new">
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Create Workspace
-                      </Link>
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <Button
+                        asChild
+                        variant="outline"
+                        className="px-5 py-2 rounded-lg"
+                      >
+                        <Link href="/workspaces/new">
+                          <PlusCircle className="mr-2 h-4 w-4" />
+                          Create Workspace
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="primarySoft"
+                        className="px-5 py-2 rounded-lg"
+                        onClick={handleApplyTemplates}
+                        disabled={applyingTemplates}
+                      >
+                        {applyingTemplates ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Sparkles className="mr-2 h-4 w-4" />
+                        )}
+                        Use Showcase Template
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+                      We will provision three curated examples: PRD Acme Full Stack Suite,
+                      PRD AI Delivery Lab, and PRD Project Ops Command.
+                    </p>
                   </div>
                 )}
 

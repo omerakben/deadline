@@ -13,6 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import Workspace
+from .services import apply_showcase_templates
 from .serializers import WorkspaceSerializer
 
 
@@ -165,6 +166,21 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
             {"workspace": out, "imported_count": len(created)},
             status=status.HTTP_201_CREATED,
         )
+
+    @action(detail=False, methods=["post"], url_path="templates/apply")
+    def apply_templates(self, request):  # type: ignore[override]
+        """Provision showcase workspaces and artifacts for the current user."""
+
+        owner_uid = getattr(request.user, "uid", None)
+        if not owner_uid:
+            return Response(
+                {"error": "Authentication required"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        created = apply_showcase_templates(owner_uid)
+        serializer = self.get_serializer(created, many=True)
+        return Response({"created": serializer.data}, status=status.HTTP_201_CREATED)
 
     def _now_iso(self):
         from datetime import datetime, timezone

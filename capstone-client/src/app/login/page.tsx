@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
-import { loginAsDemoUser } from "@/lib/demo";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -105,61 +104,6 @@ export default function LoginPage() {
     }
   };
 
-  const onDemoLogin = async () => {
-    try {
-      const result = await loginAsDemoUser();
-
-      if (!result.success) {
-        setError("email", {
-          message: result.error || "Demo access failed. Please try again.",
-        });
-        return;
-      }
-
-      // If we got a Firebase custom token, sign in with it
-      if (result.token) {
-        try {
-          // Import signInWithCustomToken dynamically to avoid errors if Firebase isn't loaded
-          const { signInWithCustomToken, getIdToken } = await import(
-            "firebase/auth"
-          );
-          const { getFirebaseAuth } = await import("@/lib/firebase/client");
-
-          const auth = getFirebaseAuth();
-          const userCredential = await signInWithCustomToken(
-            auth,
-            result.token
-          );
-
-          // Wait for the ID token to be available (fixes race condition)
-          // This ensures the token is ready before redirect happens
-          await getIdToken(userCredential.user, true);
-
-          // Give the auth context a moment to update and cache the token
-          // This prevents race conditions where the dashboard loads before token is cached
-          await new Promise((resolve) => setTimeout(resolve, 500));
-
-          // Firebase auth will trigger the useEffect above to redirect
-          return;
-        } catch (firebaseError) {
-          console.error("Firebase demo sign-in failed:", firebaseError);
-          setError("email", {
-            message: "Demo authentication failed. Please try again.",
-          });
-          return;
-        }
-      }
-
-      // Fallback: direct redirect for session-based auth
-      router.replace("/dashboard");
-    } catch (error: unknown) {
-      const err = error as { message?: string };
-      setError("email", {
-        message: err.message || "Demo access failed. Please try again.",
-      });
-    }
-  };
-
   // Prevent hydration mismatch - only show config error after client mount
   if (!mounted) {
     return (
@@ -199,7 +143,8 @@ export default function LoginPage() {
               </ul>
             )}
             <p className="text-xs text-muted-foreground">
-              Add the missing environment variables and reload the page.
+              Update your Firebase web configuration on the server and reload
+              the page. See README.md for setup instructions.
             </p>
           </CardContent>
         </Card>
@@ -222,51 +167,6 @@ export default function LoginPage() {
         </CardHeader>
 
         <CardContent>
-          {/* Demo Mode CTA - Primary for recruiters */}
-          <div className="mb-6 rounded-lg border-2 border-dashed border-blue-200 bg-blue-50 p-4">
-            <div className="mb-2 flex items-center gap-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 text-blue-600"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-              </svg>
-              <h3 className="font-semibold text-blue-900">
-                Try Demo (No Signup Required)
-              </h3>
-            </div>
-            <p className="mb-3 text-sm text-blue-800">
-              Experience DEADLINE instantly with pre-populated sample workspaces
-              and artifacts. Perfect for recruiters and evaluators.
-            </p>
-            <Button
-              onClick={onDemoLogin}
-              disabled={isSubmitting}
-              className="w-full bg-blue-600 hover:bg-blue-700 hover:shadow-lg text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-              type="button"
-            >
-              {isSubmitting ? "Launching..." : "Launch Demo"}
-            </Button>
-            <p className="mt-2 text-xs text-blue-700">
-              Demo data is shared and reset daily
-            </p>
-          </div>
-
-          <div className="mb-4 flex items-center">
-            <span className="flex-1 border-t border-dashed" />
-            <span className="mx-2 text-xs text-muted-foreground whitespace-nowrap">
-              Or sign in with your account
-            </span>
-            <span className="flex-1 border-t border-dashed" />
-          </div>
-
           <Form {...methods}>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <FormField

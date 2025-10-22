@@ -130,7 +130,7 @@ export class ErrorBoundary extends Component<Props, State> {
               <div className="text-center text-xs text-muted-foreground">
                 If this issue continues, please{" "}
                 <a
-                  href="mailto:support@deadline.demo"
+                  href="mailto:support@deadline.app"
                   className="text-primary hover:underline"
                 >
                   contact support

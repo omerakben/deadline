@@ -44,7 +44,8 @@ export function AuthGuard({ children, fallback }: AuthGuardProps) {
             </ul>
           )}
           <p className="text-xs text-muted-foreground">
-            Set the variables above (e.g. in .env.local) and reload the app.
+            Update your server configuration in <code>capstone-server/.env</code>,
+            then reload the app.
           </p>
         </div>
       </div>

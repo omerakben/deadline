@@ -1,5 +1,9 @@
 "use client";
-import { validatePublicEnv } from "@/lib/env";
+import {
+  ConfigFetchError,
+  fetchClientConfig,
+  FirebaseClientConfig,
+} from "@/lib/api/config";
 import { getFirebaseAuth } from "@/lib/firebase/client";
 import {
   createUserWithEmailAndPassword,
@@ -37,27 +41,60 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  // Env validation first
-  const missingEnv = validatePublicEnv();
-  const [configError, setConfigError] = useState<string | null>(
-    missingEnv.length
-      ? `Missing required public env vars: ${missingEnv.join(", ")}`
-      : null
-  );
+  const [configError, setConfigError] = useState<string | null>(null);
+  const [missingEnv, setMissingEnv] = useState<string[]>([]);
 
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [clientConfig, setClientConfig] = useState<FirebaseClientConfig | null>(
+    null
+  );
   const lastTokenRef = useRef<{ token: string; ts: number } | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
+    const loadConfig = async () => {
+      try {
+        const { firebase } = await fetchClientConfig();
+        if (!cancelled) {
+          setClientConfig(firebase);
+          setMissingEnv([]);
+        }
+      } catch (error: unknown) {
+        if (cancelled) return;
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to load authentication configuration.";
+        if (error instanceof ConfigFetchError) {
+          setMissingEnv(error.missing);
+        }
+        setConfigError(message);
+        setLoading(false);
+      }
+    };
+
+    void loadConfig();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     if (configError) {
-      // Skip Firebase initialization entirely
       setLoading(false);
       return;
     }
+
+    if (!clientConfig) {
+      return;
+    }
+
     let unsub: (() => void) | null = null;
     try {
-      const auth = getFirebaseAuth();
+      const auth = getFirebaseAuth(clientConfig);
       unsub = onAuthStateChanged(auth, (u) => {
         if (process.env.NODE_ENV !== "production") {
           console.debug(
@@ -68,52 +105,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setUser(u);
         setLoading(false);
       });
-    } catch (e: unknown) {
-      const msg =
-        typeof e === "object" && e && "message" in e
-          ? String((e as { message?: unknown }).message)
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
           : "Failed to initialize authentication";
-      setConfigError(msg);
+      setConfigError(message);
       setLoading(false);
     }
+
     return () => {
       if (unsub) unsub();
     };
-  }, [configError]);
+  }, [clientConfig, configError]);
 
   const signIn = useCallback(
     async (email: string, password: string) => {
       if (configError) throw new Error(configError);
-      const auth = getFirebaseAuth();
+      const auth = getFirebaseAuth(clientConfig || undefined);
       await signInWithEmailAndPassword(auth, email, password);
     },
-    [configError]
+    [configError, clientConfig]
   );
 
   const signInWithGoogle = useCallback(async () => {
     if (configError) throw new Error(configError);
-    const auth = getFirebaseAuth();
+    const auth = getFirebaseAuth(clientConfig || undefined);
     const provider = new GoogleAuthProvider();
     provider.addScope("email");
     provider.addScope("profile");
     await signInWithPopup(auth, provider);
-  }, [configError]);
+  }, [configError, clientConfig]);
 
   const signUp = useCallback(
     async (email: string, password: string) => {
       if (configError) throw new Error(configError);
-      const auth = getFirebaseAuth();
+      const auth = getFirebaseAuth(clientConfig || undefined);
       await createUserWithEmailAndPassword(auth, email, password);
     },
-    [configError]
+    [configError, clientConfig]
   );
 
   const signOut = useCallback(async () => {
     lastTokenRef.current = null;
     if (configError) return; // nothing to sign out
-    const auth = getFirebaseAuth();
+    const auth = getFirebaseAuth(clientConfig || undefined);
     await fbSignOut(auth);
-  }, [configError]);
+  }, [configError, clientConfig]);
 
   // Track current user in a ref so we can access latest value in callbacks
   const userRef = useRef(user);
@@ -124,21 +162,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const getTokenCached = useCallback(
     async (force = false) => {
       if (configError) {
-        if (process.env.NODE_ENV !== "production") {
-          console.warn(
-            "Auth: Cannot get token due to config error:",
-            configError
-          );
-        }
+        console.error("Auth: Cannot get token due to config error:", configError);
+        // Note: No toast here - config errors are already shown in UI via configError state
+        return null;
+      }
+
+      if (!clientConfig) {
+        console.warn("Auth: Firebase config not loaded yet");
         return null;
       }
 
       // Get current user - no waiting or retries needed
       const currentUser = userRef.current;
       if (!currentUser) {
-        if (process.env.NODE_ENV !== "production") {
-          console.warn("Auth: Cannot get token - user not authenticated");
-        }
+        // User not signed in - this is expected for public pages
+        // No warning needed, just return null
         return null;
       }
 
@@ -186,7 +224,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         return null;
       }
     },
-    [configError]
+    [configError, clientConfig]
   );
 
   const value: AuthContextValue = {

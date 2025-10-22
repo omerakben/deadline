@@ -27,6 +27,8 @@ DEADLINE is a full-stack command center that centralizes environment variables, 
 - Firebase authentication (email/password and Google OAuth)
 - Workspace ownership enforced in every query
 - Masked environment variable values with explicit reveal endpoints
+- Immutable audit log for every ENV_VAR reveal (captures user, IP, context)
+- Built-in rate limiting (10 ENV_VAR reveals/minute, 60 searches/hour per user)
 
 ### Interface and Performance
 
@@ -74,6 +76,14 @@ python manage.py runserver
 
 The API is available at `http://127.0.0.1:8000/api/v1/`.
 
+> **Firebase Setup:** Populate the `FIREBASE_WEB_*` variables in
+> `capstone-server/.env`. These feed the `/api/v1/auth/config/` endpoint that
+> the frontend consumes during startup.
+
+> **Tip:** After authenticating from the frontend, you can seed curated
+> showcase workspaces by calling `POST /api/v1/workspaces/templates/apply/`
+> (exposed in the UI as the **Use Showcase Template** button on the dashboard).
+
 ### Frontend
 
 ```bash
@@ -84,6 +94,9 @@ npm run dev
 ```
 
 The application runs at `http://localhost:3000`.
+
+> **Client Config:** Only `NEXT_PUBLIC_API_BASE_URL` is required locally. The
+> Firebase web credentials are retrieved automatically from the backend.
 
 ## Testing and Quality Gates
 
@@ -98,6 +111,29 @@ npm run build
 ```
 
 All commands must complete without warnings before opening a pull request.
+
+## Audit Logging & Rate Limits
+
+- ENV_VAR reveal responses now emit `ArtifactAccessLog` entries containing the
+  user UID, IP address, user agent, and workspace context.
+- The Django admin (`/admin/artifacts/artifactaccesslog/`) or direct database
+  queries can be used to review the access history.
+- Rate limits are enforced per authenticated Firebase UID:
+  - `GET /api/v1/workspaces/:id/artifacts/:artifact_id/reveal_value/` → **10 requests/minute**
+  - `GET /api/v1/workspaces/:id/artifacts/` (and search) → **60 requests/hour**
+- Exceeding a limit returns HTTP 429 (Too Many Requests); limits reset after the
+  interval window.
+
+## Showcase Templates
+
+- First-time users can click **Use Showcase Template** on the dashboard to
+  provision PRD Acme Full Stack Suite, PRD AI Delivery Lab, and PRD Project Ops
+  Command workspaces, complete with artifacts and tags.
+- The same flow is available via API: send an authenticated `POST` request to
+  `/api/v1/workspaces/templates/apply/` with a Firebase ID token in the
+  `Authorization: Bearer <token>` header.
+- Templates are idempotent per user and will create uniquely suffixed names if
+  run repeatedly, ensuring production logins stay clean without demo accounts.
 
 ## Project Structure
 

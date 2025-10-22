@@ -10,6 +10,8 @@ from auth_firebase.permissions import IsOwner
 from django.db import IntegrityError
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -19,8 +21,30 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from workspaces.models import Workspace
 
-from .models import Artifact, Tag
+from .models import Artifact, ArtifactAccessLog, Tag
 from .serializers import ArtifactSerializer, TagSerializer
+
+
+def get_client_ip(request):
+    """Extract client IP from request, handling proxy headers."""
+
+    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(",")[0].strip()
+    else:
+        ip = request.META.get("REMOTE_ADDR")
+    return ip
+
+
+def ratelimit_user_or_ip(_group, request):
+    """Return a stable key for rate limiting per Firebase UID or IP."""
+
+    user = getattr(request, "user", None)
+    if hasattr(user, "uid") and user.uid:
+        return f"user:{user.uid}"
+    if isinstance(user, str) and user:
+        return f"user:{user}"
+    return request.META.get("REMOTE_ADDR", "unknown")
 
 
 class ArtifactViewSet(viewsets.ModelViewSet):
@@ -138,8 +162,11 @@ class ArtifactViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    @method_decorator(
+        ratelimit(key=ratelimit_user_or_ip, rate="60/h", method="GET", block=True)
+    )
     def list(self, request, *args, **kwargs):
-        """Override list to apply custom filtering."""
+        """Override list to apply custom filtering (60 requests/hour per user)."""
         queryset = self.get_queryset_filters()
 
         # Apply search filter
@@ -163,6 +190,9 @@ class ArtifactViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    @method_decorator(
+        ratelimit(key=ratelimit_user_or_ip, rate="10/m", method="GET", block=True)
+    )
     @action(detail=True, methods=["get"], url_path="reveal_value")
     def reveal_value(self, request, *args, **kwargs):
         """
@@ -171,7 +201,8 @@ class ArtifactViewSet(viewsets.ModelViewSet):
         Security:
         - Uses standard IsAuthenticated + IsOwner checks from the ViewSet.
         - Only permitted for artifacts of kind ENV_VAR.
-        - Returns minimal fields necessary for display/copy.
+        - Rate limited to 10 requests per minute per user.
+        - Emits an audit log entry for every reveal.
         """
         artifact = self.get_object()
         if artifact.kind != "ENV_VAR":
@@ -179,6 +210,28 @@ class ArtifactViewSet(viewsets.ModelViewSet):
                 {"error": "Not an environment variable"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        user_uid = None
+        user = getattr(request, "user", None)
+        if hasattr(user, "uid"):
+            user_uid = user.uid
+        elif isinstance(user, str):
+            user_uid = user
+        elif user is not None:
+            user_uid = str(user)
+
+        ArtifactAccessLog.objects.create(
+            artifact=artifact,
+            action="REVEAL_VALUE",
+            user_uid=user_uid or "unknown",
+            ip_address=get_client_ip(request),
+            user_agent=request.META.get("HTTP_USER_AGENT", ""),
+            metadata={
+                "workspace_id": artifact.workspace_id,
+                "workspace_env_id": artifact.workspace_env_id,
+                "artifact_key": artifact.key,
+            },
+        )
 
         return Response(
             {

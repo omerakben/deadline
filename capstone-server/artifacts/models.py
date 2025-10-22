@@ -221,3 +221,66 @@ class ArtifactTag(models.Model):
 
     def __str__(self):  # pragma: no cover - trivial
         return "ArtifactTag"
+
+
+class ArtifactAccessLog(models.Model):
+    """Audit log for sensitive artifact operations (especially ENV_VAR reveals)."""
+
+    artifact = models.ForeignKey(
+        Artifact,
+        on_delete=models.CASCADE,
+        related_name="access_logs",
+        help_text="The artifact that was accessed",
+    )
+
+    action = models.CharField(
+        max_length=50,
+        choices=[
+            ("REVEAL_VALUE", "Revealed ENV_VAR value"),
+            ("CREATE", "Created artifact"),
+            ("UPDATE", "Updated artifact"),
+            ("DELETE", "Deleted artifact"),
+        ],
+        help_text="Type of action performed",
+    )
+
+    user_uid = models.CharField(
+        max_length=128,
+        help_text="Firebase UID of user who performed action",
+    )
+
+    ip_address = models.GenericIPAddressField(
+        null=True,
+        blank=True,
+        help_text="IP address of request",
+    )
+
+    user_agent = models.TextField(
+        blank=True,
+        help_text="User agent string from request",
+    )
+
+    timestamp = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True,
+        help_text="When the action occurred",
+    )
+
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Additional context (e.g., changed fields, reason)",
+    )
+
+    class Meta:
+        ordering = ["-timestamp"]
+        indexes = [
+            models.Index(fields=["artifact", "-timestamp"]),
+            models.Index(fields=["user_uid", "-timestamp"]),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.action} on {self.artifact.kind} by {self.user_uid} at "
+            f"{self.timestamp}"
+        )

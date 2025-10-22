@@ -1,4 +1,3 @@
-import { DemoBanner } from "@/components/DemoBanner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { HttpAuthProvider } from "@/components/HttpAuthProvider";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -55,7 +54,6 @@ export default function RootLayout({
           <AuthProvider>
             <HttpAuthProvider>
               <WorkspaceProvider>
-                <DemoBanner />
                 <SiteHeader />
                 {children}
                 <Toaster />

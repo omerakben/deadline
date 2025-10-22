@@ -153,3 +153,42 @@ def health_check(request):  # pylint: disable=unused-argument
     }
 
     return Response(health_data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def client_config(request):  # pylint: disable=unused-argument
+    """Expose Firebase web configuration for authenticated clients."""
+
+    from django.conf import settings
+
+    firebase_cfg = settings.FIREBASE_WEB_CONFIG.copy()
+
+    required_map = {
+        "apiKey": "FIREBASE_WEB_API_KEY",
+        "authDomain": "FIREBASE_WEB_AUTH_DOMAIN",
+        "projectId": "FIREBASE_WEB_PROJECT_ID",
+        "appId": "FIREBASE_WEB_APP_ID",
+    }
+
+    missing = [
+        env_var
+        for key, env_var in required_map.items()
+        if not firebase_cfg.get(key)
+    ]
+
+    if missing:
+        return Response(
+            {
+                "error": "Firebase web configuration is incomplete on the server.",
+                "missing": missing,
+                "instructions": (
+                    "Set the variables above in capstone-server/.env."
+                ),
+            },
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    # Remove empty optional values from payload
+    firebase_cfg = {k: v for k, v in firebase_cfg.items() if v}
+    return Response({"firebase": firebase_cfg}, status=status.HTTP_200_OK)

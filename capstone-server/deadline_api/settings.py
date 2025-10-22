@@ -43,9 +43,6 @@ if "collectstatic" not in sys.argv and "makemigrations" not in sys.argv:
 DEBUG = config("DEBUG", default=False, cast=bool)
 
 
-# Demo mode for public deployment without Firebase
-DEMO_MODE = config("DEMO_MODE", default=False, cast=bool)
-
 ALLOWED_HOSTS = config(
     "ALLOWED_HOSTS",
     default="localhost,127.0.0.1,testserver",
@@ -111,7 +108,6 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "auth_firebase.demo_middleware.DemoModeAuthenticationMiddleware",  # Demo mode support
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -261,6 +257,17 @@ FIREBASE_CONFIG = {
 
 FIREBASE_CREDENTIALS_FILE = config("FIREBASE_CREDENTIALS_FILE", default="")
 
+# Firebase web configuration exposed to clients (API key is public by design)
+FIREBASE_WEB_CONFIG = {
+    "apiKey": config("FIREBASE_WEB_API_KEY", default=""),
+    "authDomain": config("FIREBASE_WEB_AUTH_DOMAIN", default=""),
+    "projectId": config("FIREBASE_WEB_PROJECT_ID", default=""),
+    "storageBucket": config("FIREBASE_WEB_STORAGE_BUCKET", default=""),
+    "messagingSenderId": config("FIREBASE_WEB_MESSAGING_SENDER_ID", default=""),
+    "appId": config("FIREBASE_WEB_APP_ID", default=""),
+    "measurementId": config("FIREBASE_WEB_MEASUREMENT_ID", default=""),
+}
+
 """Firebase Admin SDK Initialization.
 
 Attempts credential initialization using (in order):
@@ -275,7 +282,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Firebase initialization - needed even in demo mode for custom token generation
+# Firebase initialization for verifying Google authentication tokens
 try:  # Initialize Firebase Admin SDK
     import firebase_admin
     from firebase_admin import credentials
@@ -327,3 +334,23 @@ if DEBUG:
     MIDDLEWARE += ["debug_toolbar.middleware.DebugToolbarMiddleware"]
     INTERNAL_IPS = ["127.0.0.1", "localhost"]
 # Dev bypass removed - real Firebase auth only
+
+
+# Rate Limiting Configuration
+RATELIMIT_ENABLE = True
+RATELIMIT_USE_CACHE = "default"
+RATELIMIT_EXCEPTION_CLASS = "rest_framework.exceptions.Throttled"
+
+
+def ratelimit_key(group, request):
+    """Generate rate-limit key from Firebase UID or fallback to IP."""
+
+    user = getattr(request, "user", None)
+    if hasattr(user, "uid") and user.uid:
+        return f"user:{user.uid}"
+    if isinstance(user, str) and user:
+        return f"user:{user}"
+    return request.META.get("REMOTE_ADDR", "unknown")
+
+
+RATELIMIT_KEY_FUNC = "deadline_api.settings.ratelimit_key"
