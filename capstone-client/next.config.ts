@@ -1,9 +1,12 @@
 // Next.js config
-// Configure Turbopack root to silence workspace root inference warnings
-// See: https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory
+import path from "path";
+
+const workspaceRoot = path.join(__dirname, "..");
+
 const config = {
+  outputFileTracingRoot: workspaceRoot,
   turbopack: {
-    root: __dirname,
+    root: workspaceRoot,
   },
   images: {
     remotePatterns: [

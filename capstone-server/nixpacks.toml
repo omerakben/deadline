@@ -2,7 +2,7 @@
 # This file controls how Railway builds and runs the Django application
 
 [phases.setup]
-nixPkgs = ["python3", "postgresql_16.dev", "gcc"]
+nixPkgs = ["python312", "postgresql_16"]
 
 [phases.install]
 cmds = [
