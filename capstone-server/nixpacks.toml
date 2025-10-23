@@ -2,12 +2,13 @@
 # This file controls how Railway builds and runs the Django application
 
 [phases.setup]
-nixPkgs = ["python312", "postgresql_16"]
+nixPkgs = ["python312", "postgresql_16", "pkg-config"]
 
 [phases.install]
 cmds = [
-    "python -m venv --copies /opt/venv",
-    ". /opt/venv/bin/activate && pip install -r requirements.txt"
+    "python -m venv /app/.venv",
+    "/app/.venv/bin/pip install --upgrade pip",
+    "/app/.venv/bin/pip install -r requirements.txt"
 ]
 
 [phases.build]
@@ -17,4 +18,4 @@ cmds = []
 
 [start]
 # Run migrations and collectstatic at startup (when env vars are available)
-cmd = "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn deadline_api.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --timeout 60 --access-logfile - --error-logfile -"
+cmd = "/app/.venv/bin/python manage.py migrate --noinput && /app/.venv/bin/python manage.py collectstatic --noinput && /app/.venv/bin/gunicorn deadline_api.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --timeout 60 --access-logfile - --error-logfile -"
