@@ -3,66 +3,104 @@
 [![Django](https://img.shields.io/badge/Django-5.1-092E20?style=flat&logo=django)](https://www.djangoproject.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-000000?style=flat&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat&logo=typescript)](https://www.typescriptlang.org/)
-[![Tests](https://img.shields.io/badge/Tests-57%2F57%20Passing-success?style=flat)]()
+[![Tests](https://img.shields.io/badge/Tests-64%2F64%20Passing-success?style=flat)]()
+[![Railway](https://img.shields.io/badge/Deployed-Railway-blueviolet?style=flat&logo=railway)](https://deadline-production.up.railway.app)
+[![Vercel](https://img.shields.io/badge/Deployed-Vercel-000000?style=flat&logo=vercel)](https://deadline-demo.vercel.app)
 
-DEADLINE is a full-stack command center that centralizes environment variables, reusable prompts, and documentation links across multiple workspaces and environments (development, staging, production). Firebase authentication enforces strict access controls and every artifact is scoped to its owning workspace.
+**DEADLINE** is a full-stack developer command center that centralizes environment variables, reusable prompts, and documentation links across multiple workspaces and environments. Built with modern technologies and enterprise-grade security.
 
-## Overview
+---
 
-- Secure storage for environment variables with server-side masking
-- Prompt library for engineering and support teams
-- Documentation hub with tagging and workspace-level filtering
-- First-class support for multiple environments per workspace
+## Live Demo
+
+- **Frontend:** [https://deadline-demo.vercel.app](https://deadline-demo.vercel.app)
+- **Backend API:** [https://deadline-production.up.railway.app/api/v1/](https://deadline-production.up.railway.app/api/v1/)
+- **API Docs:** [https://deadline-production.up.railway.app/api/v1/schema/](https://deadline-production.up.railway.app/api/v1/schema/)
+
+![DEADLINE Dashboard](https://via.placeholder.com/1200x600/1a1b26/ffffff?text=DEADLINE+Dashboard+Screenshot)
+
+---
 
 ## Key Features
 
-### Workspace Management
+### **Security First**
 
-- Multiple workspaces per user, each with environment-specific artifacts
-- Tagging and search APIs for quick lookups
-- Import and export routines for backup and sharing
+- **Firebase Authentication** (Email/Password + Google OAuth)
+- **Workspace Isolation** - Users can only access their own data
+- **Masked ENV Variables** - Values hidden by default with explicit reveal
+- **Immutable Audit Logs** - Track every ENV_VAR reveal (user, IP, timestamp)
+- **Rate Limiting** - 10 reveals/minute, 60 searches/hour per user
 
-### Security
+### **Workspace Management**
 
-- Firebase authentication (email/password and Google OAuth)
-- Workspace ownership enforced in every query
-- Masked environment variable values with explicit reveal endpoints
-- Immutable audit log for every ENV_VAR reveal (captures user, IP, context)
-- Built-in rate limiting (10 ENV_VAR reveals/minute, 60 searches/hour per user)
+- **Multi-Workspace Support** - Organize projects separately
+- **Environment Separation** - DEV, STAGING, PROD per workspace
+- **Tagging & Search** - Quick artifact lookups
+- **Import/Export** - Backup and share workspace data
 
-### Interface and Performance
+### **Artifact Types**
 
-- Responsive UI built with Next.js 15, React 19, and Tailwind CSS 4
-- Server-side rendering and edge-friendly API usage
-- Optimized API client with shared caching and retry logic
+- **ENV_VAR** - Secure environment variable storage
+- **PROMPT** - Reusable engineering prompts and templates
+- **DOC_LINK** - Centralized documentation hub
+
+### **Developer Experience**
+
+- **Responsive UI** - Built with Next.js 15 App Router + Tailwind CSS 4
+- **Type-Safe** - Full TypeScript coverage
+- **OpenAPI Docs** - Interactive API documentation with Swagger/ReDoc
+- **Showcase Templates** - Pre-populated demo workspaces for quick start
+
+---
 
 ## Tech Stack
 
 ### Backend
 
-- Django 5.1 with Django REST Framework
-- PostgreSQL in production (SQLite for development)
-- Firebase Admin SDK for authentication
-- drf-spectacular for OpenAPI documentation
-- Railway deployment targets with gunicorn
+- **Django 5.1** + Django REST Framework
+- **PostgreSQL** (Railway) / SQLite (local dev)
+- **Firebase Admin SDK** for authentication
+- **drf-spectacular** for OpenAPI/Swagger docs
+- **Gunicorn** + **WhiteNoise** for production
+- **Railway** deployment
 
 ### Frontend
 
-- Next.js 15 App Router with TypeScript 5
-- React Query style data fetching via dedicated API clients
-- Tailwind CSS 4 utility-first styling
-- Vercel deployment configuration
+- **Next.js 15** with App Router + React 19
+- **TypeScript 5** - Strict mode enabled
+- **Tailwind CSS 4** - Utility-first styling
+- **Axios** - API client with interceptors
+- **Firebase SDK** - Client-side authentication
+- **Vercel** deployment
 
-## Quick Start
+### DevOps & Tooling
+
+- **Nixpacks** build system
+- **GitHub Actions** CI/CD (optional)
+- **ESLint** + **Prettier** code formatting
+- **pytest** backend testing (64 tests passing)
+
+---
+
+## Documentation
+
+Developer guides live in [`docs/development/`](./docs/development/):
+
+- **[Getting Started](./docs/development/getting-started.md)** - Local development setup
+- **[Testing Guide](./docs/development/testing.md)** - Quality gates and manual QA
+- **[Architecture Overview](./docs/development/architecture.md)** - System design and patterns
+- **[AI Guidelines](./docs/development/ai-guidelines.md)** - Collaboration practices for AI coding partners
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Python 3.12 or newer
-- Node.js 20 or newer
+- Python 3.12+ (backend)
+- Node.js 20+ (frontend)
 - Firebase project with Authentication enabled
-- PostgreSQL (optional for local development)
+- PostgreSQL (optional for local dev)
 
-### Backend
+### Backend Setup
 
 ```bash
 cd capstone-server
@@ -70,102 +108,166 @@ python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env
+# Edit .env with your Firebase credentials
 python manage.py migrate
 python manage.py runserver
 ```
 
-The API is available at `http://127.0.0.1:8000/api/v1/`.
+**API:** <http://127.0.0.1:8000/api/v1/>
 
-> **Firebase Setup:** Populate the `FIREBASE_WEB_*` variables in
-> `capstone-server/.env`. These feed the `/api/v1/auth/config/` endpoint that
-> the frontend consumes during startup.
-
-> **Tip:** After authenticating from the frontend, you can seed curated
-> showcase workspaces by calling `POST /api/v1/workspaces/templates/apply/`
-> (exposed in the UI as the **Use Showcase Template** button on the dashboard).
-
-### Frontend
+### Frontend Setup
 
 ```bash
 cd capstone-client
 npm install
 cp .env.example .env.local
+# Edit .env.local: NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
 npm run dev
 ```
 
-The application runs at `http://localhost:3000`.
+**App:** <http://localhost:3000>
 
-> **Client Config:** Only `NEXT_PUBLIC_API_BASE_URL` is required locally. The
-> Firebase web credentials are retrieved automatically from the backend.
+> **Note:** Firebase config is fetched automatically from the backend's `/api/v1/auth/config/` endpoint.
 
-## Testing and Quality Gates
+---
+
+## Testing
+
+### Backend Tests
 
 ```bash
 cd capstone-server
-python manage.py test -v 2
-
-cd ../capstone-client
-npm run lint
-npm run typecheck
-npm run build
+python manage.py test
 ```
 
-All commands must complete without warnings before opening a pull request.
+**Result:** 64/64 tests passing
 
-## Audit Logging & Rate Limits
+### Frontend Quality
 
-- ENV_VAR reveal responses now emit `ArtifactAccessLog` entries containing the
-  user UID, IP address, user agent, and workspace context.
-- The Django admin (`/admin/artifacts/artifactaccesslog/`) or direct database
-  queries can be used to review the access history.
-- Rate limits are enforced per authenticated Firebase UID:
-  - `GET /api/v1/workspaces/:id/artifacts/:artifact_id/reveal_value/` → **10 requests/minute**
-  - `GET /api/v1/workspaces/:id/artifacts/` (and search) → **60 requests/hour**
-- Exceeding a limit returns HTTP 429 (Too Many Requests); limits reset after the
-  interval window.
-
-## Showcase Templates
-
-- First-time users can click **Use Showcase Template** on the dashboard to
-  provision PRD Acme Full Stack Suite, PRD AI Delivery Lab, and PRD Project Ops
-  Command workspaces, complete with artifacts and tags.
-- The same flow is available via API: send an authenticated `POST` request to
-  `/api/v1/workspaces/templates/apply/` with a Firebase ID token in the
-  `Authorization: Bearer <token>` header.
-- Templates are idempotent per user and will create uniquely suffixed names if
-  run repeatedly, ensuring production logins stay clean without demo accounts.
-
-## Project Structure
-
-```text
-deadline/
-|-- capstone-server/          # Django REST API backend
-|   |-- deadline_api/         # Project settings and root config
-|   |-- workspaces/           # Workspace models and endpoints
-|   |-- artifacts/            # Artifact models and endpoints
-|   `-- auth_firebase/        # Firebase authentication backend
-`-- capstone-client/          # Next.js frontend
-    |-- src/app/              # App Router pages
-    |-- src/components/       # Reusable UI components
-    |-- src/contexts/         # React contexts (auth, workspace)
-    |-- src/lib/              # API clients and utilities
-    `-- src/types/            # Type definitions
+```bash
+cd capstone-client
+npm run lint      # ESLint: 0 errors
+npm run typecheck # TypeScript: 0 errors
+npm run build     # Production build: Success
 ```
 
-## Deployment
+---
 
-- Backend: Railway with PostgreSQL and gunicorn
-- Frontend: Vercel (uses `.env.local` for build-time configuration)
-- CI workflow runs backend tests, frontend linting, type checking, and builds before deploying
+## Use Cases
+
+- **Development Teams:** Centralize ENV variables across microservices
+- **Engineering Onboarding:** Share reusable prompts and code templates
+- **Documentation Hub:** Organize API docs, wikis, and guides
+- **Multi-Environment Management:** Separate DEV/STAGING/PROD configurations
+- **Audit Compliance:** Track access to sensitive environment variables
+
+## Architecture
+
+```
+┌─────────────────┐      HTTPS/REST      ┌──────────────────┐
+│                 │◄────────────────────►│                  │
+│  Next.js 15     │                      │  Django 5.1 API  │
+│  (Vercel)       │   Firebase Auth      │  (Railway)       │
+│                 │◄────────────────────►│                  │
+└─────────────────┘                      └──────────────────┘
+        │                                         │
+        │                                         ├─► PostgreSQL
+        ▼                                         │
+  ┌──────────┐                                    ├─► Firebase Admin SDK
+  │ Firebase │◄───────────────────────────────────┘
+  │   Auth   │         Token Verification
+  └──────────┘
+```
+
+### Key Design Decisions
+
+- **Monorepo Structure** - Shared root with separate client/server directories
+- **Firebase for Auth** - Token-based authentication, no session management
+- **Workspace Isolation** - All queries scoped to `owner_uid` from Firebase token
+- **Dynamic Firebase Config** - Frontend fetches config from backend API (no duplication)
+- **Audit Logging** - Immutable `ArtifactAccessLog` for compliance
+- **Rate Limiting** - DRF throttling for reveal and search endpoints
+
+---
+
+## Screenshots
+
+### Dashboard - Workspace Overview
+
+![Dashboard](https://via.placeholder.com/800x500/1a1b26/ffffff?text=Dashboard+Screenshot)
+
+### Workspace Detail - Artifact Management
+
+![Workspace Detail](https://via.placeholder.com/800x500/1a1b26/ffffff?text=Workspace+Detail+Screenshot)
+
+### API Documentation - Interactive Swagger UI
+
+![API Docs](https://via.placeholder.com/800x500/1a1b26/ffffff?text=API+Documentation+Screenshot)
+
+---
 
 ## Contributing
 
+Contributions are welcome! Please follow these steps:
+
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/use-case`)
-3. Run backend tests and frontend QA commands
-4. Commit using Conventional Commit prefixes (`feat:`, `fix:`, `docs:`, etc.)
-5. Open a pull request with a clear summary, test evidence, and any relevant screenshots
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'feat: Add amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
 
-## License and Attribution
+### Development Guidelines
 
-This project is published for portfolio and community reference. Questions and suggestions are welcome via issues or pull requests.
+- Follow [Conventional Commits](https://www.conventionalcommits.org/)
+- Write tests for new features (backend: 85%+ coverage goal)
+- Run `npm run qa` (frontend) and `python manage.py test` (backend) before PR
+- Update documentation for user-facing changes
+
+---
+
+## 📝 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 👤 Author
+
+**Omer Akben (Ozzy)**
+
+- Website: [omerakben.com](https://omerakben.com)
+- GitHub: [@omerakben](https://github.com/omerakben)
+- LinkedIn: [linkedin.com/in/omerakben](https://linkedin.com/in/omerakben)
+
+---
+
+## Acknowledgments
+
+- [Django](https://www.djangoproject.com/) - High-level Python web framework
+- [Next.js](https://nextjs.org/) - React framework for production
+- [Firebase](https://firebase.google.com/) - Authentication and real-time services
+- [Railway](https://railway.app/) - Backend hosting and PostgreSQL
+- [Vercel](https://vercel.com/) - Frontend hosting and edge network
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
+
+---
+
+## 📊 Project Status
+
+- **Current Version:** 1.0.0
+- **Status:** Production Ready
+- **Last Updated:** October 24, 2025
+- **Maintenance:** Active
+
+---
+
+## Links
+
+- **Live Demo:** [https://deadline-demo.vercel.app](https://deadline-demo.vercel.app)
+- **API Documentation:** [https://deadline-production.up.railway.app/api/v1/schema/](https://deadline-production.up.railway.app/api/v1/schema/)
+- **Issue Tracker:** [GitHub Issues](https://github.com/omerakben/deadline/issues)
+- **Changelog:** [CHANGELOG.md](./CHANGELOG.md)
+
+---
+
+**Built with ❤️ by Omer Akben**
