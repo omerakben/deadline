@@ -1,13 +1,18 @@
 // Next.js config
 import path from "path";
 
-const workspaceRoot = path.join(__dirname, "..");
+// Only use workspace root for local development
+const isDev = process.env.NODE_ENV === "development";
+const workspaceRoot = isDev ? path.join(__dirname, "..") : undefined;
 
 const config = {
-  outputFileTracingRoot: workspaceRoot,
-  turbopack: {
-    root: workspaceRoot,
-  },
+  ...(workspaceRoot && { outputFileTracingRoot: workspaceRoot }),
+  ...(isDev &&
+    workspaceRoot && {
+      turbopack: {
+        root: workspaceRoot,
+      },
+    }),
   images: {
     remotePatterns: [
       {
