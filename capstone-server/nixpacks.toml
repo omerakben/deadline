@@ -17,5 +17,5 @@ cmds = [
 cmds = []
 
 [start]
-# Run migrations and collectstatic at startup (when env vars are available)
-cmd = "/app/.venv/bin/python manage.py migrate --noinput && /app/.venv/bin/python manage.py collectstatic --noinput && /app/.venv/bin/gunicorn deadline_api.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --timeout 60 --access-logfile - --error-logfile -"
+# Generate Firebase credentials, run migrations, collectstatic, then start gunicorn
+cmd = "/app/.venv/bin/python scripts/generate_firebase_creds.py && /app/.venv/bin/python manage.py migrate --noinput && /app/.venv/bin/python manage.py collectstatic --noinput && /app/.venv/bin/gunicorn deadline_api.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --timeout 60 --access-logfile - --error-logfile -"
