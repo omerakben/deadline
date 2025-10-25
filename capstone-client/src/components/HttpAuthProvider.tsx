@@ -9,17 +9,17 @@ import { useEffect, useRef } from "react";
  * Should be mounted once under AuthProvider to initialize axios interceptors
  */
 export function HttpAuthProvider({ children }: { children: React.ReactNode }) {
-  const { getIdToken, signOut, loading, configError } = useAuth();
+  const { user, loading, configError } = useAuth();
   const attachedRef = useRef(false);
 
   useEffect(() => {
-    if (attachedRef.current) return;
     if (loading) return; // wait for auth init
     if (configError) return; // don't attach if config broken
-    // http client expects a single token provider function
-    attachAuth(getIdToken);
+
+    // Attach user to http client (or null when logged out)
+    attachAuth(user);
     attachedRef.current = true;
-  }, [getIdToken, signOut, loading, configError]);
+  }, [user, loading, configError]);
 
   return <>{children}</>;
 }

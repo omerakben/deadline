@@ -78,9 +78,11 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3001",
     "http://localhost:3002",
     "http://127.0.0.1:3002",
+    # Production Vercel deployment
+    "https://deadline-demo.vercel.app",
 ]
 
-# Add Vercel domain if configured
+# Add additional Vercel domain if configured via environment variable
 VERCEL_FRONTEND_URL = config("VERCEL_FRONTEND_URL", default="")
 if VERCEL_FRONTEND_URL:
     CORS_ALLOWED_ORIGINS.append(VERCEL_FRONTEND_URL)
@@ -95,6 +97,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:3001",
     "http://localhost:3002",
     "http://127.0.0.1:3002",
+    # Production Vercel deployment
+    "https://deadline-demo.vercel.app",
 ]
 if VERCEL_FRONTEND_URL:
     CSRF_TRUSTED_ORIGINS.append(VERCEL_FRONTEND_URL)

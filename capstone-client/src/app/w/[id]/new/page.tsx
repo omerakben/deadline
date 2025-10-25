@@ -500,23 +500,25 @@ function CreateArtifactContent() {
                                   { slug: "STAGING" as const, name: "Staging" },
                                   { slug: "PROD" as const, name: "Production" },
                                 ]
-                            ).map((env) => (
-                              <div
-                                key={env.slug}
-                                className="flex items-center space-x-2"
-                              >
-                                <RadioGroupItem
-                                  value={env.slug}
-                                  id={`env-${env.slug}`}
-                                />
-                                <label
-                                  htmlFor={`env-${env.slug}`}
-                                  className="cursor-pointer"
+                            )
+                              .filter((env) => env.slug) // Filter out any undefined slugs
+                              .map((env) => (
+                                <div
+                                  key={env.slug}
+                                  className="flex items-center space-x-2"
                                 >
-                                  {env.name}
-                                </label>
-                              </div>
-                            ))}
+                                  <RadioGroupItem
+                                    value={env.slug!}
+                                    id={`env-${env.slug}`}
+                                  />
+                                  <label
+                                    htmlFor={`env-${env.slug}`}
+                                    className="cursor-pointer"
+                                  >
+                                    {env.name}
+                                  </label>
+                                </div>
+                              ))}
                           </RadioGroup>
                         </FormControl>
                         <FormMessage />
