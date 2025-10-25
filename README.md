@@ -15,7 +15,8 @@
 
 - **Frontend:** [https://deadline-demo.vercel.app](https://deadline-demo.vercel.app)
 - **Backend API:** [https://deadline-production.up.railway.app/api/v1/](https://deadline-production.up.railway.app/api/v1/)
-- **API Docs:** [https://deadline-production.up.railway.app/api/v1/schema/](https://deadline-production.up.railway.app/api/v1/schema/)
+- **Swagger UI:** [https://deadline-production.up.railway.app/api/docs/](https://deadline-production.up.railway.app/api/docs/)
+- **OpenAPI Schema:** [https://deadline-production.up.railway.app/api/schema/](https://deadline-production.up.railway.app/api/schema/)
 
 ![DEADLINE Dashboard](https://via.placeholder.com/1200x600/1a1b26/ffffff?text=DEADLINE+Dashboard+Screenshot)
 
@@ -128,6 +129,59 @@ npm run dev
 **App:** <http://localhost:3000>
 
 > **Note:** Firebase config is fetched automatically from the backend's `/api/v1/auth/config/` endpoint.
+
+---
+
+## 🌐 Production Deployment
+
+### Backend (Railway)
+
+The backend is deployed on Railway with PostgreSQL:
+
+1. **Environment Variables Required:**
+   ```bash
+   # Django settings
+   DEBUG=False
+   SECRET_KEY=<your-secret-key>
+   ALLOWED_HOSTS=*.railway.app
+
+   # Database (auto-provided by Railway)
+   DATABASE_URL=<auto-configured>
+
+   # Firebase Admin SDK
+   FIREBASE_CREDENTIALS=<base64-encoded-service-account-json>
+
+   # CORS (optional - Vercel URL is hardcoded in settings.py)
+   VERCEL_FRONTEND_URL=https://deadline-demo.vercel.app
+   ```
+
+2. **Deployment:** Railway auto-deploys from the `main` branch
+3. **API Endpoints:**
+   - **API Root:** https://deadline-production.up.railway.app/api/v1/
+   - **Swagger UI:** https://deadline-production.up.railway.app/api/docs/
+   - **OpenAPI Schema:** https://deadline-production.up.railway.app/api/schema/
+
+### Frontend (Vercel)
+
+The frontend is deployed on Vercel with automatic deployments:
+
+1. **Environment Variables Required:**
+   ```bash
+   # Backend API URL (CRITICAL)
+   NEXT_PUBLIC_API_BASE_URL=https://deadline-production.up.railway.app/api/v1
+   ```
+
+2. **Deployment:** Vercel auto-deploys from the `main` branch
+3. **Live URL:** https://deadline-demo.vercel.app
+
+### CORS Configuration
+
+The backend is configured to accept requests from:
+- `https://deadline-demo.vercel.app` (production)
+- `http://localhost:3000` (local development)
+- Any additional URL set in `VERCEL_FRONTEND_URL` environment variable
+
+> **Important:** If you change the Vercel deployment URL, update `CORS_ALLOWED_ORIGINS` in `capstone-server/deadline_api/settings.py`
 
 ---
 
@@ -264,7 +318,9 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ## Links
 
 - **Live Demo:** [https://deadline-demo.vercel.app](https://deadline-demo.vercel.app)
-- **API Documentation:** [https://deadline-production.up.railway.app/api/v1/schema/](https://deadline-production.up.railway.app/api/v1/schema/)
+- **Swagger UI:** [https://deadline-production.up.railway.app/api/docs/](https://deadline-production.up.railway.app/api/docs/)
+- **OpenAPI Schema:** [https://deadline-production.up.railway.app/api/schema/](https://deadline-production.up.railway.app/api/schema/)
+- **API Root:** [https://deadline-production.up.railway.app/api/v1/](https://deadline-production.up.railway.app/api/v1/)
 - **Issue Tracker:** [GitHub Issues](https://github.com/omerakben/deadline/issues)
 - **Changelog:** [CHANGELOG.md](./CHANGELOG.md)
 
