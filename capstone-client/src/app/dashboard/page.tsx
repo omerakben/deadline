@@ -11,13 +11,13 @@ import { searchArtifactsGlobal } from "@/lib/api/search";
 import { applyShowcaseTemplates } from "@/lib/api/workspaces";
 import type { Artifact } from "@/types/artifacts";
 import {
-    Database,
-    FileText,
-    Loader2,
-    PlusCircle,
-    RotateCcw,
-    Search,
-    Sparkles,
+  Database,
+  FileText,
+  Loader2,
+  PlusCircle,
+  RotateCcw,
+  Search,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -44,6 +44,13 @@ function DashboardContent() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [applyingTemplates, setApplyingTemplates] = useState(false);
   const { toast } = useToast();
+
+  // Auto-refetch workspaces when returning from deletion
+  useEffect(() => {
+    if (searchParams.get("refresh") === "true") {
+      refetch();
+    }
+  }, [searchParams, refetch]);
 
   const handleApplyTemplates = async () => {
     setApplyingTemplates(true);
@@ -219,7 +226,10 @@ function DashboardContent() {
                         </thead>
                         <tbody>
                           {searchResults.slice(0, 25).map((a) => (
-                            <tr key={a.id} className="border-t">
+                            <tr
+                              key={`${a.workspace}-${a.id}`}
+                              className="border-t"
+                            >
                               <td className="px-3 py-2">{a.kind}</td>
                               <td className="px-3 py-2">
                                 {a.kind === "ENV_VAR"
@@ -307,7 +317,7 @@ function DashboardContent() {
                       Jump in by creating your own workspace or load our
                       showcase templates to explore every feature instantly.
                     </p>
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                       <Button
                         asChild
                         variant="outline"
@@ -320,21 +330,26 @@ function DashboardContent() {
                       </Button>
                       <Button
                         variant="primarySoft"
-                        className="px-5 py-2 rounded-lg"
+                        className="px-6 py-3 rounded-lg cursor-pointer text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-primary/20 relative overflow-hidden group"
                         onClick={handleApplyTemplates}
                         disabled={applyingTemplates}
                       >
-                        {applyingTemplates ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <Sparkles className="mr-2 h-4 w-4" />
-                        )}
-                        Use Showcase Template
+                        <span className="relative z-10 flex items-center">
+                          {applyingTemplates ? (
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          ) : (
+                            <Sparkles className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
+                          )}
+                          Use Showcase Template
+                        </span>
+                        {/* Animated background gradient effect */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                       </Button>
                     </div>
                     <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-                      We will provision three curated examples: PRD Acme Full Stack Suite,
-                      PRD AI Delivery Lab, and PRD Project Ops Command.
+                      We will provision three curated examples: PRD Acme Full
+                      Stack Suite, PRD AI Delivery Lab, and PRD Project Ops
+                      Command.
                     </p>
                   </div>
                 )}

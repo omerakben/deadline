@@ -5,6 +5,7 @@ This module defines serializers for converting workspace models
 to/from JSON representations for API responses.
 """
 
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from .models import Workspace
@@ -48,6 +49,7 @@ class WorkspaceSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Workspace name cannot be empty")
         return value.strip()
 
+    @extend_schema_field(serializers.DictField())
     def get_artifact_counts(self, obj):
         """
         Compute artifact counts by type and environment.
@@ -90,6 +92,7 @@ class WorkspaceSerializer(serializers.ModelSerializer):
             "by_environment": by_environment,
         }
 
+    @extend_schema_field(serializers.ListField(child=serializers.DictField()))
     def get_enabled_environments(self, obj):
         """Return enabled environments for this workspace as a list of dicts."""
         # Allow views to opt-out to avoid extra queries in list endpoints

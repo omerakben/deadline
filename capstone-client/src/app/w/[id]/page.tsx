@@ -1,17 +1,17 @@
 "use client";
 import {
-    ArrowLeft,
-    Check,
-    Copy,
-    Files,
-    FileText,
-    KeyRound,
-    Layers,
-    Loader2,
-    MessageSquare,
-    Pencil,
-    PlusCircle,
-    Trash2,
+  ArrowLeft,
+  Check,
+  Copy,
+  Files,
+  FileText,
+  KeyRound,
+  Layers,
+  Loader2,
+  MessageSquare,
+  Pencil,
+  PlusCircle,
+  Trash2,
 } from "lucide-react";
 
 import { AuthGuard } from "@/components/AuthGuard";
@@ -22,32 +22,32 @@ import { EnvironmentToggle } from "@/components/ui/environment-toggle";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-    deleteArtifact,
-    duplicateArtifactToEnvironment,
-    listArtifacts,
+  deleteArtifact,
+  duplicateArtifactToEnvironment,
+  listArtifacts,
 } from "@/lib/api/artifacts";
 import { http } from "@/lib/api/http";
 import {
-    deleteWorkspace,
-    getWorkspace,
-    updateEnabledEnvironments,
-    type Workspace,
+  deleteWorkspace,
+  getWorkspace,
+  updateEnabledEnvironments,
+  type Workspace,
 } from "@/lib/api/workspaces";
-import type {
-    Artifact,
-    ArtifactKind,
-    EnvCode,
-    EnvVarArtifact,
-} from "@/types/artifacts";
 import { ENV_COLORS } from "@/types";
+import type {
+  Artifact,
+  ArtifactKind,
+  EnvCode,
+  EnvVarArtifact,
+} from "@/types/artifacts";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
 } from "../../../components/ui/tabs";
 
 /**
@@ -102,8 +102,15 @@ function WorkspaceDetailContent() {
             PROD: enabled.includes("PROD"),
           });
         } catch {}
-      } catch (err) {
+      } catch (err: unknown) {
         if (process.env.NODE_ENV !== "production") console.error(err);
+        // If workspace is deleted (404), redirect to dashboard
+        if (
+          (err as { response?: { status?: number } })?.response?.status === 404
+        ) {
+          router.push("/dashboard");
+          return;
+        }
         setError("Failed to load workspace");
         // allow retry if it failed (e.g., first call without auth)
         didLoadWorkspace.current = false;
@@ -112,7 +119,7 @@ function WorkspaceDetailContent() {
       }
     };
     void loadWorkspace();
-  }, [user, workspaceId]);
+  }, [user, workspaceId, router]);
 
   // Debounce search input
   useEffect(() => {
@@ -131,13 +138,20 @@ function WorkspaceDetailContent() {
         ...(debouncedSearch ? { search: debouncedSearch } : {}),
       });
       setArtifacts(data);
-    } catch (err) {
+    } catch (err: unknown) {
       if (process.env.NODE_ENV !== "production") console.error(err);
+      // If workspace is deleted (404), redirect to dashboard
+      if (
+        (err as { response?: { status?: number } })?.response?.status === 404
+      ) {
+        router.push("/dashboard");
+        return;
+      }
       setError("Failed to load artifacts");
     } finally {
       setLoadingArtifacts(false);
     }
-  }, [workspaceId, currentEnv, debouncedSearch, kindFilter]);
+  }, [workspaceId, currentEnv, debouncedSearch, kindFilter, router]);
 
   useEffect(() => {
     if (!user || !workspaceId) return;
@@ -182,10 +196,37 @@ function WorkspaceDetailContent() {
       } catch {}
       setSavedFlash(true);
       setTimeout(() => setSavedFlash(false), 1400);
-    } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : "Failed to update environments";
-      alert(msg);
+    } catch (err: unknown) {
+      // Check if the error is from Axios with response data
+      const axiosError = err as {
+        response?: {
+          data?: {
+            error?: string;
+            blocking?: Array<{ slug: string; artifact_count: number }>;
+          };
+        };
+      };
+
+      if (axiosError?.response?.data?.blocking) {
+        const blocking = axiosError.response.data.blocking;
+        const details = blocking
+          .map(
+            (b) =>
+              `${b.slug}: ${b.artifact_count} artifact${
+                b.artifact_count !== 1 ? "s" : ""
+              }`
+          )
+          .join(", ");
+        alert(
+          `Cannot disable environments that contain artifacts.\n\n` +
+            `${details}\n\n` +
+            `Please delete or move artifacts first, then try again.`
+        );
+      } else {
+        const msg =
+          err instanceof Error ? err.message : "Failed to update environments";
+        alert(msg);
+      }
     }
   };
 
@@ -374,7 +415,8 @@ function WorkspaceDetailContent() {
                     return;
                   try {
                     await deleteWorkspace(workspaceId);
-                    router.push("/workspaces");
+                    // Navigate to dashboard with refresh parameter to trigger refetch
+                    router.push("/dashboard?refresh=true");
                   } catch {
                     alert("Delete workspace failed");
                   }

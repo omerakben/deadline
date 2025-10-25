@@ -1,5 +1,6 @@
 "use client";
 
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,6 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWorkspaces } from "@/contexts/WorkspaceContext";
-import { Breadcrumbs } from "@/components/Breadcrumbs";
 import {
   exportWorkspace,
   importWorkspace,
@@ -35,6 +35,7 @@ import {
   AlertTriangle,
   Download,
   FileText,
+  Loader2,
   Shield,
   Upload,
   User,
@@ -44,7 +45,9 @@ import { useState } from "react";
 export default function SettingsPage() {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
-  const [isExporting, setIsExporting] = useState(false);
+  const [exportingWorkspaceId, setExportingWorkspaceId] = useState<
+    number | null
+  >(null);
   const [isImporting, setIsImporting] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -59,7 +62,7 @@ export default function SettingsPage() {
     workspaceId: number,
     workspaceName: string
   ) => {
-    setIsExporting(true);
+    setExportingWorkspaceId(workspaceId);
     try {
       const exportData = await exportWorkspace(workspaceId);
 
@@ -92,7 +95,7 @@ export default function SettingsPage() {
         variant: "destructive",
       });
     } finally {
-      setIsExporting(false);
+      setExportingWorkspaceId(null);
     }
   };
 
@@ -179,7 +182,12 @@ export default function SettingsPage() {
 
   return (
     <div className="container mx-auto max-w-4xl p-6 space-y-8">
-      <Breadcrumbs items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Settings", current: true }]} />
+      <Breadcrumbs
+        items={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Settings", current: true },
+        ]}
+      />
       <div>
         <h1 className="text-3xl font-bold">Settings</h1>
         <p className="text-muted-foreground mt-2">
@@ -272,7 +280,7 @@ export default function SettingsPage() {
             </p>
             <WorkspaceExportList
               onExport={handleExportWorkspace}
-              isExporting={isExporting}
+              exportingWorkspaceId={exportingWorkspaceId}
             />
           </div>
 
@@ -398,10 +406,10 @@ export default function SettingsPage() {
 // Separate component for workspace export list to handle async data loading
 function WorkspaceExportList({
   onExport,
-  isExporting,
+  exportingWorkspaceId,
 }: {
   onExport: (id: number, name: string) => void;
-  isExporting: boolean;
+  exportingWorkspaceId: number | null;
 }) {
   const { workspaces, loading } = useWorkspaces();
 
@@ -443,10 +451,19 @@ function WorkspaceExportList({
             variant="outline"
             size="sm"
             onClick={() => onExport(workspace.id, workspace.name)}
-            disabled={isExporting}
+            disabled={exportingWorkspaceId === workspace.id}
           >
-            <Download className="h-4 w-4 mr-2" />
-            {isExporting ? "Exporting..." : "Export"}
+            {exportingWorkspaceId === workspace.id ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Exporting...
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </>
+            )}
           </Button>
         </div>
       ))}

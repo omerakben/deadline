@@ -81,14 +81,13 @@ export function WorkspaceCard({ workspace, className }: WorkspaceCardProps) {
         </div>
 
         {/* Quick actions */}
-        <div className="flex gap-2 pt-2 border-t border-dashed">
+        <div className="flex gap-2 pt-2 border-t border-dashed pointer-events-none">
           <Button
-            asChild
             variant="secondary"
             size="sm"
             className="flex-1 gap-1 shadow-none"
           >
-            <Link href={`/w/${workspace.id}`}>Open Workspace</Link>
+            Open Workspace
           </Button>
         </div>
       </CardContent>

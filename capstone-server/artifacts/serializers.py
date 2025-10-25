@@ -6,6 +6,7 @@ to/from JSON representations for API responses with dynamic field handling.
 """
 
 from django.db.models import QuerySet
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from workspaces.models import WorkspaceEnvironment
 
@@ -144,6 +145,7 @@ class ArtifactSerializer(serializers.ModelSerializer):
 
         return data
 
+    @extend_schema_field(serializers.ListField(child=serializers.DictField()))
     def get_tag_objects(self, instance):
         tags_qs = getattr(instance, "tags", None)
         if not tags_qs:
@@ -223,7 +225,7 @@ class ArtifactSerializer(serializers.ModelSerializer):
         for scheme in DANGEROUS_SCHEMES:
             if value_lower.startswith(scheme):
                 raise serializers.ValidationError(
-                    f"Invalid URL scheme. Only http:// and https:// are allowed."
+                    "Invalid URL scheme. Only http:// and https:// are allowed."
                 )
 
         # Ensure it starts with http:// or https://
