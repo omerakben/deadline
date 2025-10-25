@@ -7,6 +7,28 @@ import { http } from "./http";
 export type ArtifactKind = "ENV_VAR" | "PROMPT" | "DOC_LINK";
 export type EnvironmentSlug = "DEV" | "STAGING" | "PROD";
 
+/**
+ * Tag interface for artifact tagging system
+ * Note: Tag functionality may not be fully implemented in backend
+ */
+export interface Tag {
+  id: number;
+  name: string;
+  workspace?: number;
+  usage_count?: number;
+}
+
+/**
+ * Specific input type for creating ENV_VAR artifacts
+ */
+export interface CreateEnvVarInput {
+  kind: "ENV_VAR";
+  environment: EnvironmentSlug;
+  key: string;
+  value: string;
+  notes?: string;
+}
+
 export interface Artifact {
   id: number;
   workspace: number;
@@ -32,6 +54,9 @@ export interface CreateArtifactInput {
   kind: ArtifactKind;
   environment: EnvironmentSlug;
 
+  // Common fields
+  notes?: string;
+
   // ENV_VAR fields
   key?: string;
   value?: string;
@@ -43,6 +68,7 @@ export interface CreateArtifactInput {
   // DOC_LINK fields
   url?: string;
   description?: string;
+  label?: string;
 }
 
 export interface UpdateArtifactInput {
@@ -204,12 +230,53 @@ export async function duplicateArtifactToEnvironment(
   }
 }
 
-// Export types for convenience
-export type {
-  ArtifactKind,
-  EnvironmentSlug,
-  Artifact,
-  CreateArtifactInput,
-  UpdateArtifactInput,
-  ArtifactFilters,
-};
+/**
+ * List all tags for a workspace
+ *
+ * Note: This is a stub implementation. Tag functionality may not be fully
+ * implemented in the backend. Returns empty array for now.
+ *
+ * @param workspaceId - Workspace ID
+ * @returns Empty array (tag feature not implemented in backend)
+ */
+export async function listTags(workspaceId: number): Promise<Tag[]> {
+  // TODO: Implement when backend tag API is available
+  console.warn("Tag functionality not yet implemented in backend");
+  return [];
+}
+
+/**
+ * Create a new tag
+ *
+ * Note: This is a stub implementation. Tag functionality may not be fully
+ * implemented in the backend.
+ *
+ * @param workspaceId - Workspace ID
+ * @param name - Tag name
+ * @returns Stub tag object
+ */
+export async function createTag(workspaceId: number, name: string): Promise<Tag> {
+  // TODO: Implement when backend tag API is available
+  console.warn("Tag functionality not yet implemented in backend");
+  return {
+    id: Date.now(), // temporary ID
+    name,
+    workspace: workspaceId,
+  };
+}
+
+/**
+ * Delete a tag
+ *
+ * Note: This is a stub implementation. Tag functionality may not be fully
+ * implemented in the backend.
+ *
+ * @param workspaceId - Workspace ID
+ * @param tagId - Tag ID to delete
+ */
+export async function deleteTag(workspaceId: number, tagId: number): Promise<void> {
+  // TODO: Implement when backend tag API is available
+  console.warn("Tag functionality not yet implemented in backend");
+  return;
+}
+

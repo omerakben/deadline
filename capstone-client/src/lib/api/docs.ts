@@ -8,9 +8,10 @@ export interface DocLink {
   workspace: number;
   kind: "DOC_LINK";
   environment: "DEV" | "STAGING" | "PROD";
-  title?: string;
-  url?: string;
+  title: string;
+  url: string;
   description?: string;
+  label?: string;
   created_at: string;
   updated_at: string;
 }
@@ -32,6 +33,3 @@ export async function listDocLinksGlobalServer(): Promise<DocLink[]> {
     throw error;
   }
 }
-
-// Export types for convenience
-export type { DocLink };

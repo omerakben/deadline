@@ -13,6 +13,8 @@ export interface EnvironmentType {
 export interface WorkspaceEnvironment {
   id: number;
   environment_type?: EnvironmentType;
+  slug?: string; // Convenience field for direct access to environment slug
+  name?: string; // Convenience field for direct access to environment name
 }
 
 export interface ArtifactCounts {
@@ -20,6 +22,14 @@ export interface ArtifactCounts {
   PROMPT: number;
   DOC_LINK: number;
   total: number;
+  by_environment?: {
+    [key: string]: {
+      ENV_VAR: number;
+      PROMPT: number;
+      DOC_LINK: number;
+      total: number;
+    };
+  };
 }
 
 export interface Workspace {
@@ -164,12 +174,58 @@ export async function applyShowcaseTemplates(): Promise<Workspace[]> {
   }
 }
 
-// Export types for convenience
-export type {
-  EnvironmentType,
-  WorkspaceEnvironment,
-  ArtifactCounts,
-  Workspace,
-  CreateWorkspaceInput,
-  UpdateWorkspaceInput,
-};
+/**
+ * Export data type for workspace import/export
+ */
+export interface ExportData {
+  workspace: Workspace;
+  artifacts?: unknown[];
+  // Add other exportable data as needed
+}
+
+/**
+ * Export a workspace with all its data
+ *
+ * Note: This is a stub implementation. Export functionality may not be fully
+ * implemented in the backend.
+ *
+ * @param workspaceId - Workspace ID to export
+ * @returns Export data
+ */
+export async function exportWorkspace(workspaceId: number): Promise<ExportData> {
+  try {
+    // TODO: Implement when backend export API is available
+    const workspace = await getWorkspace(workspaceId);
+    return {
+      workspace,
+      artifacts: [],
+    };
+  } catch (error) {
+    console.error(`Failed to export workspace ${workspaceId}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Import a workspace from export data
+ *
+ * Note: This is a stub implementation. Import functionality may not be fully
+ * implemented in the backend.
+ *
+ * @param data - Export data to import
+ * @returns Imported workspace
+ */
+export async function importWorkspace(data: ExportData): Promise<Workspace> {
+  try {
+    // TODO: Implement when backend import API is available
+    console.warn("Workspace import not yet implemented in backend");
+    const workspace = await createWorkspace({
+      name: data.workspace.name + " (Imported)",
+      description: data.workspace.description,
+    });
+    return workspace;
+  } catch (error) {
+    console.error("Failed to import workspace:", error);
+    throw error;
+  }
+}

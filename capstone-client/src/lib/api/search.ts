@@ -39,6 +39,3 @@ export async function searchArtifactsGlobal(query: SearchQuery): Promise<SearchR
     throw error;
   }
 }
-
-// Export types for convenience
-export type { SearchResult, SearchQuery };
