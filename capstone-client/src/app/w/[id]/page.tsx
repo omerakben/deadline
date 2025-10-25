@@ -565,30 +565,35 @@ function WorkspaceDetailContent() {
                     display_order: 2,
                   },
                 ]
-            ).map((env) => {
-              const active = currentEnv === env.slug;
-              const colors = ENV_COLORS[env.slug as EnvCode];
-              return (
-                <TabsTrigger
-                  key={env.slug}
-                  value={env.slug}
-                  className={
-                    "rounded-full px-3 py-1 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors " +
-                    (active
-                      ? `border-2 ${colors.bg} ${colors.text} ${colors.border} shadow-sm hover:shadow`
-                      : "text-muted-foreground hover:bg-muted/60 hover:text-foreground")
-                  }
-                >
-                  {env.slug}
-                  {workspace?.artifact_counts?.by_environment?.[env.slug] !==
-                    undefined && (
-                    <span className="ml-2 text-xs text-muted-foreground">
-                      {workspace.artifact_counts.by_environment[env.slug]}
-                    </span>
-                  )}
-                </TabsTrigger>
-              );
-            })}
+            )
+              .filter((env) => env.slug) // Filter out any undefined slugs
+              .map((env) => {
+                const active = currentEnv === env.slug;
+                const colors = ENV_COLORS[env.slug as EnvCode];
+                return (
+                  <TabsTrigger
+                    key={env.slug}
+                    value={env.slug!}
+                    className={
+                      "rounded-full px-3 py-1 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors " +
+                      (active
+                        ? `border-2 ${colors.bg} ${colors.text} ${colors.border} shadow-sm hover:shadow`
+                        : "text-muted-foreground hover:bg-muted/60 hover:text-foreground")
+                    }
+                  >
+                    {env.slug}
+                    {workspace?.artifact_counts?.by_environment?.[env.slug!] !==
+                      undefined && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {
+                          workspace.artifact_counts.by_environment[env.slug!]
+                            .total
+                        }
+                      </span>
+                    )}
+                  </TabsTrigger>
+                );
+              })}
           </TabsList>
           <TabsContent value={currentEnv} className="mt-6">
             <Card>

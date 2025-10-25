@@ -1,8 +1,13 @@
-import axios, { AxiosInstance, AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
+import { getApiUrl } from "@/lib/env";
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  InternalAxiosRequestConfig,
+} from "axios";
 import { User as FirebaseUser } from "firebase/auth";
 
-// Get the API base URL from environment variable
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://deadline-production.up.railway.app/api/v1";
+// Get the API base URL from environment variable (defaults to localhost for dev)
+const API_BASE_URL = getApiUrl();
 
 // Create axios instance with default config
 const httpClient: AxiosInstance = axios.create({
@@ -59,7 +64,11 @@ httpClient.interceptors.response.use(
     const originalRequest = error.config;
 
     // If 401 and we have a user, try to refresh token once
-    if (error.response?.status === 401 && currentUser && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      currentUser &&
+      !originalRequest._retry
+    ) {
       originalRequest._retry = true;
 
       try {
@@ -84,4 +93,4 @@ httpClient.interceptors.response.use(
 export const http = httpClient;
 
 // Export types for request configuration
-export type { AxiosRequestConfig, AxiosInstance };
+export type { AxiosInstance, AxiosRequestConfig };

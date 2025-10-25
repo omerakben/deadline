@@ -1,4 +1,4 @@
-import { FirebaseApp, initializeApp, getApps, getApp } from "firebase/app";
+import { FirebaseApp, getApps, initializeApp } from "firebase/app";
 import { Auth, getAuth } from "firebase/auth";
 
 export interface FirebaseClientConfig {

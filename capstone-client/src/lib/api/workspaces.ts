@@ -91,7 +91,9 @@ export async function getWorkspace(id: number): Promise<Workspace> {
  * Endpoint: POST /api/v1/workspaces/
  * Auth: Required (Bearer token)
  */
-export async function createWorkspace(data: CreateWorkspaceInput): Promise<Workspace> {
+export async function createWorkspace(
+  data: CreateWorkspaceInput
+): Promise<Workspace> {
   try {
     const response = await http.post<Workspace>("/workspaces/", data);
     return response.data;
@@ -107,7 +109,10 @@ export async function createWorkspace(data: CreateWorkspaceInput): Promise<Works
  * Endpoint: PATCH /api/v1/workspaces/{id}/
  * Auth: Required (Bearer token)
  */
-export async function updateWorkspace(id: number, data: UpdateWorkspaceInput): Promise<Workspace> {
+export async function updateWorkspace(
+  id: number,
+  data: UpdateWorkspaceInput
+): Promise<Workspace> {
   try {
     const response = await http.patch<Workspace>(`/workspaces/${id}/`, data);
     return response.data;
@@ -152,7 +157,10 @@ export async function updateEnabledEnvironments(
     );
     return response.data;
   } catch (error) {
-    console.error(`Failed to update enabled environments for workspace ${id}:`, error);
+    console.error(
+      `Failed to update enabled environments for workspace ${id}:`,
+      error
+    );
     throw error;
   }
 }
@@ -166,7 +174,9 @@ export async function updateEnabledEnvironments(
  */
 export async function applyShowcaseTemplates(): Promise<Workspace[]> {
   try {
-    const response = await http.post<Workspace[]>("/workspaces/templates/apply");
+    const response = await http.post<Workspace[]>(
+      "/workspaces/templates/apply"
+    );
     return response.data;
   } catch (error) {
     console.error("Failed to apply showcase templates:", error);
@@ -178,6 +188,7 @@ export async function applyShowcaseTemplates(): Promise<Workspace[]> {
  * Export data type for workspace import/export
  */
 export interface ExportData {
+  version?: string;
   workspace: Workspace;
   artifacts?: unknown[];
   // Add other exportable data as needed
@@ -192,7 +203,9 @@ export interface ExportData {
  * @param workspaceId - Workspace ID to export
  * @returns Export data
  */
-export async function exportWorkspace(workspaceId: number): Promise<ExportData> {
+export async function exportWorkspace(
+  workspaceId: number
+): Promise<ExportData> {
   try {
     // TODO: Implement when backend export API is available
     const workspace = await getWorkspace(workspaceId);

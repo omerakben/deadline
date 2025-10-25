@@ -1,11 +1,11 @@
+import type { Artifact, ArtifactKind, EnvCode } from "@/types/artifacts";
 import { http } from "./http";
 
 /**
- * TypeScript interfaces for Artifacts
+ * Type aliases for compatibility
  */
-
-export type ArtifactKind = "ENV_VAR" | "PROMPT" | "DOC_LINK";
-export type EnvironmentSlug = "DEV" | "STAGING" | "PROD";
+export type EnvironmentSlug = EnvCode;
+export type { Artifact, ArtifactKind } from "@/types/artifacts";
 
 /**
  * Tag interface for artifact tagging system
@@ -27,27 +27,6 @@ export interface CreateEnvVarInput {
   key: string;
   value: string;
   notes?: string;
-}
-
-export interface Artifact {
-  id: number;
-  workspace: number;
-  kind: ArtifactKind;
-  environment: EnvironmentSlug;
-  created_at: string;
-  updated_at: string;
-
-  // Environment Variable fields
-  key?: string;
-  value?: string;
-
-  // Prompt fields
-  title?: string;
-  content?: string;
-
-  // Doc Link fields
-  url?: string;
-  description?: string;
 }
 
 export interface CreateArtifactInput {
@@ -88,8 +67,10 @@ export interface UpdateArtifactInput {
 }
 
 export interface ArtifactFilters {
+  workspaceId: number;
   kind?: ArtifactKind;
   environment?: EnvironmentSlug;
+  search?: string;
 }
 
 /**
@@ -100,18 +81,22 @@ export interface ArtifactFilters {
  * Auth: Required (Bearer token)
  */
 export async function listArtifacts(
-  workspaceId: number,
-  filters?: ArtifactFilters
+  filters: ArtifactFilters
 ): Promise<Artifact[]> {
   try {
+    const { workspaceId, kind, environment, search } = filters;
     const params = new URLSearchParams();
 
-    if (filters?.kind) {
-      params.append("kind", filters.kind);
+    if (kind) {
+      params.append("kind", kind);
     }
 
-    if (filters?.environment) {
-      params.append("environment", filters.environment);
+    if (environment) {
+      params.append("environment", environment);
+    }
+
+    if (search) {
+      params.append("search", search);
     }
 
     const queryString = params.toString();
@@ -122,7 +107,10 @@ export async function listArtifacts(
     const response = await http.get<Artifact[]>(url);
     return response.data;
   } catch (error) {
-    console.error(`Failed to list artifacts for workspace ${workspaceId}:`, error);
+    console.error(
+      `Failed to list artifacts for workspace ${filters.workspaceId}:`,
+      error
+    );
     throw error;
   }
 }
@@ -133,12 +121,20 @@ export async function listArtifacts(
  * Endpoint: GET /api/v1/workspaces/{workspaceId}/artifacts/{artifactId}/
  * Auth: Required (Bearer token)
  */
-export async function getArtifact(workspaceId: number, artifactId: number): Promise<Artifact> {
+export async function getArtifact(
+  workspaceId: number,
+  artifactId: number
+): Promise<Artifact> {
   try {
-    const response = await http.get<Artifact>(`/workspaces/${workspaceId}/artifacts/${artifactId}/`);
+    const response = await http.get<Artifact>(
+      `/workspaces/${workspaceId}/artifacts/${artifactId}/`
+    );
     return response.data;
   } catch (error) {
-    console.error(`Failed to get artifact ${artifactId} from workspace ${workspaceId}:`, error);
+    console.error(
+      `Failed to get artifact ${artifactId} from workspace ${workspaceId}:`,
+      error
+    );
     throw error;
   }
 }
@@ -154,10 +150,16 @@ export async function createArtifact(
   data: CreateArtifactInput
 ): Promise<Artifact> {
   try {
-    const response = await http.post<Artifact>(`/workspaces/${workspaceId}/artifacts/`, data);
+    const response = await http.post<Artifact>(
+      `/workspaces/${workspaceId}/artifacts/`,
+      data
+    );
     return response.data;
   } catch (error) {
-    console.error(`Failed to create artifact in workspace ${workspaceId}:`, error);
+    console.error(
+      `Failed to create artifact in workspace ${workspaceId}:`,
+      error
+    );
     throw error;
   }
 }
@@ -180,7 +182,10 @@ export async function updateArtifact(
     );
     return response.data;
   } catch (error) {
-    console.error(`Failed to update artifact ${artifactId} in workspace ${workspaceId}:`, error);
+    console.error(
+      `Failed to update artifact ${artifactId} in workspace ${workspaceId}:`,
+      error
+    );
     throw error;
   }
 }
@@ -191,11 +196,17 @@ export async function updateArtifact(
  * Endpoint: DELETE /api/v1/workspaces/{workspaceId}/artifacts/{artifactId}/
  * Auth: Required (Bearer token)
  */
-export async function deleteArtifact(workspaceId: number, artifactId: number): Promise<void> {
+export async function deleteArtifact(
+  workspaceId: number,
+  artifactId: number
+): Promise<void> {
   try {
     await http.delete(`/workspaces/${workspaceId}/artifacts/${artifactId}/`);
   } catch (error) {
-    console.error(`Failed to delete artifact ${artifactId} from workspace ${workspaceId}:`, error);
+    console.error(
+      `Failed to delete artifact ${artifactId} from workspace ${workspaceId}:`,
+      error
+    );
     throw error;
   }
 }
@@ -231,15 +242,15 @@ export async function duplicateArtifactToEnvironment(
 }
 
 /**
- * List all tags for a workspace
+ * List all tags in a workspace
  *
  * Note: This is a stub implementation. Tag functionality may not be fully
  * implemented in the backend. Returns empty array for now.
  *
- * @param workspaceId - Workspace ID
+ * @param _workspaceId - Workspace ID (unused in stub)
  * @returns Empty array (tag feature not implemented in backend)
  */
-export async function listTags(workspaceId: number): Promise<Tag[]> {
+export async function listTags(_workspaceId: number): Promise<Tag[]> {
   // TODO: Implement when backend tag API is available
   console.warn("Tag functionality not yet implemented in backend");
   return [];
@@ -255,7 +266,10 @@ export async function listTags(workspaceId: number): Promise<Tag[]> {
  * @param name - Tag name
  * @returns Stub tag object
  */
-export async function createTag(workspaceId: number, name: string): Promise<Tag> {
+export async function createTag(
+  workspaceId: number,
+  name: string
+): Promise<Tag> {
   // TODO: Implement when backend tag API is available
   console.warn("Tag functionality not yet implemented in backend");
   return {
@@ -271,12 +285,14 @@ export async function createTag(workspaceId: number, name: string): Promise<Tag>
  * Note: This is a stub implementation. Tag functionality may not be fully
  * implemented in the backend.
  *
- * @param workspaceId - Workspace ID
- * @param tagId - Tag ID to delete
+ * @param _workspaceId - Workspace ID (unused in stub)
+ * @param _tagId - Tag ID to delete (unused in stub)
  */
-export async function deleteTag(workspaceId: number, tagId: number): Promise<void> {
+export async function deleteTag(
+  _workspaceId: number,
+  _tagId: number
+): Promise<void> {
   // TODO: Implement when backend tag API is available
   console.warn("Tag functionality not yet implemented in backend");
   return;
 }
-

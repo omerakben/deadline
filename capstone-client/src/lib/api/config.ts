@@ -1,5 +1,5 @@
-import { http } from "./http";
 import { FirebaseClientConfig } from "@/lib/firebase/client";
+import { http } from "./http";
 
 /**
  * Custom error for configuration fetch failures
@@ -29,11 +29,9 @@ export interface ConfigResponse {
  */
 export async function fetchClientConfig(): Promise<ConfigResponse> {
   try {
-    const response = await http.get<FirebaseClientConfig>("/auth/config/");
-    // Wrap the response in the expected format
-    return {
-      firebase: response.data,
-    };
+    const response = await http.get<ConfigResponse>("/auth/config/");
+    // Backend already returns {"firebase": {...}}, so return as-is
+    return response.data;
   } catch (error) {
     console.error("Failed to fetch Firebase client config:", error);
     throw new ConfigFetchError(
