@@ -100,7 +100,15 @@ class ArtifactSerializer(serializers.ModelSerializer):
             if workspace:
                 target.queryset = Tag.objects.filter(workspace=workspace)
             else:
-                # Fallback: use all tags (this shouldn't happen in normal operation)
+                # Fallback: use all tags (this should rarely happen)
+                # In production, workspace should always be available
+                import logging
+
+                logger = logging.getLogger(__name__)
+                logger.warning(
+                    "ArtifactSerializer initialized without workspace context. "
+                    "Tag validation may not work correctly."
+                )
                 target.queryset = Tag.objects.all()
 
     def to_representation(self, instance):
@@ -322,16 +330,31 @@ class ArtifactSerializer(serializers.ModelSerializer):
 
         if not workspace:
             # If no workspace context, can't validate - let the view handle it
+            # This shouldn't happen in normal operation
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.warning("validate_tags called without workspace context")
             return tags
 
         workspace_id = workspace.id if hasattr(workspace, "id") else workspace
 
         # Check all tags belong to the same workspace
-        invalid_tags = [tag for tag in tags if tag.workspace_id != workspace_id]
+        invalid_tags = []
+        for tag in tags:
+            if not hasattr(tag, "workspace_id"):
+                # Tag object doesn't have workspace_id - shouldn't happen
+                import logging
+
+                logger = logging.getLogger(__name__)
+                logger.error(f"Tag {tag} missing workspace_id attribute")
+                continue
+            if tag.workspace_id != workspace_id:
+                invalid_tags.append(tag)
 
         if invalid_tags:
             raise serializers.ValidationError(
-                f"Tags must belong to the same workspace. Invalid tags: {[t.id for t in invalid_tags]}"
+                f"Tags must belong to the same workspace. Invalid tag IDs: {[t.id for t in invalid_tags]}"
             )
 
         return tags

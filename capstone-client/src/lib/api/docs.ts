@@ -26,8 +26,9 @@ export interface DocLink {
  */
 export async function listDocLinksGlobalServer(): Promise<DocLink[]> {
   try {
-    const response = await http.get<DocLink[]>("/docs/");
-    return response.data;
+    const response = await http.get<{ results: DocLink[] }>("/docs/");
+    // Backend uses DRF pagination, so extract results array
+    return response.data.results || [];
   } catch (error) {
     console.error("Failed to list documentation links:", error);
     throw error;

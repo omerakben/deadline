@@ -5,25 +5,24 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { SecretInput } from "@/components/ui/secret-input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-    createTag,
-    deleteTag,
-    listTags,
-    updateArtifact,
-    type CreateArtifactInput,
-    type CreateEnvVarInput,
-    type Tag,
+  createTag,
+  deleteTag,
+  listTags,
+  updateArtifact,
+  type Tag,
+  type UpdateArtifactInput,
 } from "@/lib/api/artifacts";
 import { http } from "@/lib/api/http";
 import { listWorkspaces } from "@/lib/api/workspaces";
@@ -188,8 +187,15 @@ function EditArtifactContent() {
         try {
           const tags = await listTags(workspaceId);
           setAllTags(tags);
-          // Initialize selected tags from artifact response if present
-          const currentIds = (data.tags as number[] | undefined) || [];
+          // Initialize selected tags from artifact response
+          // Backend returns both 'tags' (IDs) and 'tag_objects' (expanded)
+          // Prefer tag_objects for display, but extract IDs from either source
+          const artifactWithTags = data as Artifact & {
+            tag_objects?: { id: number; name: string }[];
+          };
+          const currentIds = artifactWithTags.tag_objects
+            ? artifactWithTags.tag_objects.map((t) => t.id)
+            : data.tags || [];
           setSelectedTags(currentIds);
         } catch (e) {
           if (process.env.NODE_ENV !== "production") {
@@ -275,14 +281,13 @@ function EditArtifactContent() {
         return;
       }
       // Prepare PATCH dto; omit blank ENV_VAR value to keep unchanged
-      const dto: Partial<CreateArtifactInput> & { tags?: number[] } = {
+      const dto: UpdateArtifactInput = {
         ...data,
         tags: selectedTags,
       };
       if (artifact.kind === "ENV_VAR") {
-        const envDto = dto as Partial<CreateEnvVarInput> & { tags?: number[] };
-        if ((envDto.value ?? "") === "") {
-          delete envDto.value;
+        if ((dto.value ?? "") === "") {
+          delete dto.value;
         }
       }
       await updateArtifact(workspaceId, artifact.id, dto);

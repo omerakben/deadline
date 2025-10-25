@@ -52,6 +52,7 @@ export interface CreateArtifactInput {
 
 export interface UpdateArtifactInput {
   environment?: EnvironmentSlug;
+  notes?: string;
 
   // ENV_VAR fields
   key?: string;
@@ -64,6 +65,9 @@ export interface UpdateArtifactInput {
   // DOC_LINK fields
   url?: string;
   description?: string;
+
+  // Tags (array of tag IDs)
+  tags?: number[];
 }
 
 export interface ArtifactFilters {
@@ -71,6 +75,16 @@ export interface ArtifactFilters {
   kind?: ArtifactKind;
   environment?: EnvironmentSlug;
   search?: string;
+}
+
+/**
+ * Paginated response from DRF PageNumberPagination
+ */
+interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
 }
 
 /**
@@ -104,8 +118,9 @@ export async function listArtifacts(
       ? `/workspaces/${workspaceId}/artifacts/?${queryString}`
       : `/workspaces/${workspaceId}/artifacts/`;
 
-    const response = await http.get<Artifact[]>(url);
-    return response.data;
+    const response = await http.get<PaginatedResponse<Artifact>>(url);
+    // Backend uses DRF pagination, so extract the results array
+    return response.data.results || [];
   } catch (error) {
     console.error(
       `Failed to list artifacts for workspace ${filters.workspaceId}:`,
@@ -244,55 +259,77 @@ export async function duplicateArtifactToEnvironment(
 /**
  * List all tags in a workspace
  *
- * Note: This is a stub implementation. Tag functionality may not be fully
- * implemented in the backend. Returns empty array for now.
+ * Endpoint: GET /api/v1/workspaces/{workspaceId}/artifacts/tags/
+ * Auth: Required (Bearer token)
+ * Note: Tags endpoint does NOT use pagination (returns simple array)
  *
- * @param _workspaceId - Workspace ID (unused in stub)
- * @returns Empty array (tag feature not implemented in backend)
+ * @param workspaceId - Workspace ID
+ * @returns Array of tags with usage counts
  */
-export async function listTags(_workspaceId: number): Promise<Tag[]> {
-  // TODO: Implement when backend tag API is available
-  console.warn("Tag functionality not yet implemented in backend");
-  return [];
+export async function listTags(workspaceId: number): Promise<Tag[]> {
+  try {
+    const response = await http.get<Tag[]>(
+      `/workspaces/${workspaceId}/artifacts/tags/`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`Failed to list tags for workspace ${workspaceId}:`, error);
+    throw error;
+  }
 }
 
 /**
- * Create a new tag
+ * Create a new tag in a workspace
  *
- * Note: This is a stub implementation. Tag functionality may not be fully
- * implemented in the backend.
+ * Endpoint: POST /api/v1/workspaces/{workspaceId}/artifacts/tags/
+ * Auth: Required (Bearer token)
  *
  * @param workspaceId - Workspace ID
- * @param name - Tag name
- * @returns Stub tag object
+ * @param name - Tag name (unique within workspace)
+ * @returns Created tag object
  */
 export async function createTag(
   workspaceId: number,
   name: string
 ): Promise<Tag> {
-  // TODO: Implement when backend tag API is available
-  console.warn("Tag functionality not yet implemented in backend");
-  return {
-    id: Date.now(), // temporary ID
-    name,
-    workspace: workspaceId,
-  };
+  try {
+    const response = await http.post<Tag>(
+      `/workspaces/${workspaceId}/artifacts/tags/`,
+      {
+        name,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      `Failed to create tag "${name}" in workspace ${workspaceId}:`,
+      error
+    );
+    throw error;
+  }
 }
 
 /**
- * Delete a tag
+ * Delete a tag from a workspace
  *
- * Note: This is a stub implementation. Tag functionality may not be fully
- * implemented in the backend.
+ * Endpoint: DELETE /api/v1/workspaces/{workspaceId}/artifacts/tags/{tagId}/
+ * Auth: Required (Bearer token)
+ * Note: Removes tag from all artifacts (cascade delete of ArtifactTag relations)
  *
- * @param _workspaceId - Workspace ID (unused in stub)
- * @param _tagId - Tag ID to delete (unused in stub)
+ * @param workspaceId - Workspace ID
+ * @param tagId - Tag ID to delete
  */
 export async function deleteTag(
-  _workspaceId: number,
-  _tagId: number
+  workspaceId: number,
+  tagId: number
 ): Promise<void> {
-  // TODO: Implement when backend tag API is available
-  console.warn("Tag functionality not yet implemented in backend");
-  return;
+  try {
+    await http.delete(`/workspaces/${workspaceId}/artifacts/tags/${tagId}/`);
+  } catch (error) {
+    console.error(
+      `Failed to delete tag ${tagId} from workspace ${workspaceId}:`,
+      error
+    );
+    throw error;
+  }
 }

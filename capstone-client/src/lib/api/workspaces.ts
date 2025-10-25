@@ -61,8 +61,9 @@ export interface UpdateWorkspaceInput {
  */
 export async function listWorkspaces(): Promise<Workspace[]> {
   try {
-    const response = await http.get<Workspace[]>("/workspaces/");
-    return response.data;
+    const response = await http.get<{ results: Workspace[] }>("/workspaces/");
+    // Backend uses DRF pagination, so extract results array
+    return response.data.results || [];
   } catch (error) {
     console.error("Failed to list workspaces:", error);
     throw error;
@@ -169,15 +170,16 @@ export async function updateEnabledEnvironments(
  * Apply showcase templates to create demo workspaces
  * This creates sample workspaces with pre-populated artifacts
  *
- * Endpoint: POST /api/v1/workspaces/templates/apply
+ * Endpoint: POST /api/v1/workspaces/templates/apply/
  * Auth: Required (Bearer token)
  */
 export async function applyShowcaseTemplates(): Promise<Workspace[]> {
   try {
-    const response = await http.post<Workspace[]>(
-      "/workspaces/templates/apply"
+    const response = await http.post<{ created: Workspace[] }>(
+      "/workspaces/templates/apply/"
     );
-    return response.data;
+    // Backend returns {"created": [...]} structure
+    return response.data.created;
   } catch (error) {
     console.error("Failed to apply showcase templates:", error);
     throw error;

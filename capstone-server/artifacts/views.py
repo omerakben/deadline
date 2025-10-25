@@ -76,9 +76,12 @@ class ArtifactViewSet(viewsets.ModelViewSet):
                     field = serializer.fields["tags"]
                     target = getattr(field, "child_relation", field)
                     target.queryset = Tag.objects.filter(workspace=ws)
-        except Exception:
-            # Non-fatal safeguard; default behavior still applies
-            pass
+        except Exception as e:
+            # Log error but don't fail - serializer should still work with validation
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to set tag queryset in serializer: {e}")
         return serializer
 
     def get_queryset(self):
